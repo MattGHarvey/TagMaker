@@ -36,6 +36,14 @@
             // Clear all keyword substitutions
             $('#clear-all-keyword-substitutions').on('click', this.clearAllKeywordSubstitutions);
             
+            // Bulk import handlers
+            $('#import-blocked-keywords').on('click', this.bulkImportBlockedKeywords);
+            $('#import-substitutions').on('click', this.bulkImportSubstitutions);
+            
+            // Toggle bulk import sections
+            $('#show-bulk-blocked, #toggle-bulk-blocked').on('click', this.toggleBulkBlocked);
+            $('#show-bulk-substitutions, #toggle-bulk-substitutions').on('click', this.toggleBulkSubstitutions);
+            
             // Enter key handlers
             $('#new-blocked-keyword').on('keypress', function(e) {
                 if (e.which === 13) {
@@ -284,6 +292,122 @@
                     $button.prop('disabled', false).text(originalText);
                 }
             });
+        },
+        
+        /**
+         * Bulk import blocked keywords
+         */
+        bulkImportBlockedKeywords: function() {
+            var $textarea = $('#bulk-blocked-keywords');
+            var keywords = $textarea.val().trim();
+            var $button = $(this);
+            var originalText = $button.text();
+            
+            if (!keywords) {
+                iptcAdmin.showNotification('Please enter keywords to import.', 'error');
+                return;
+            }
+            
+            $button.prop('disabled', true).text('Importing...');
+            
+            $.ajax({
+                url: iptcTagMaker.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'iptc_bulk_import_blocked_keywords',
+                    keywords: keywords,
+                    nonce: iptcTagMaker.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $textarea.val('');
+                        $('#blocked-keywords-list').html(response.data.html);
+                        iptcAdmin.showNotification(response.data.message, 'success');
+                    } else {
+                        iptcAdmin.showNotification(response.data || iptcTagMaker.strings.errorOccurred, 'error');
+                    }
+                },
+                error: function() {
+                    iptcAdmin.showNotification(iptcTagMaker.strings.errorOccurred, 'error');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text(originalText);
+                }
+            });
+        },
+        
+        /**
+         * Bulk import keyword substitutions
+         */
+        bulkImportSubstitutions: function() {
+            var $textarea = $('#bulk-substitutions');
+            var substitutions = $textarea.val().trim();
+            var $button = $(this);
+            var originalText = $button.text();
+            
+            if (!substitutions) {
+                iptcAdmin.showNotification('Please enter substitutions to import.', 'error');
+                return;
+            }
+            
+            $button.prop('disabled', true).text('Importing...');
+            
+            $.ajax({
+                url: iptcTagMaker.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'iptc_bulk_import_substitutions',
+                    substitutions: substitutions,
+                    nonce: iptcTagMaker.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $textarea.val('');
+                        $('#keyword-substitutions-list').html(response.data.html);
+                        iptcAdmin.showNotification(response.data.message, 'success');
+                    } else {
+                        iptcAdmin.showNotification(response.data || iptcTagMaker.strings.errorOccurred, 'error');
+                    }
+                },
+                error: function() {
+                    iptcAdmin.showNotification(iptcTagMaker.strings.errorOccurred, 'error');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text(originalText);
+                }
+            });
+        },
+        
+        /**
+         * Toggle bulk blocked keywords section
+         */
+        toggleBulkBlocked: function() {
+            var $section = $('.iptc-admin-section').first().find('.iptc-bulk-import');
+            var $showButton = $('#show-bulk-blocked');
+            
+            if ($section.is(':visible')) {
+                $section.hide();
+                $showButton.show();
+            } else {
+                $section.show();
+                $showButton.hide();
+            }
+        },
+        
+        /**
+         * Toggle bulk substitutions section
+         */
+        toggleBulkSubstitutions: function() {
+            var $section = $('.iptc-admin-section').last().find('.iptc-bulk-import');
+            var $showButton = $('#show-bulk-substitutions');
+            
+            if ($section.is(':visible')) {
+                $section.hide();
+                $showButton.show();
+            } else {
+                $section.show();
+                $showButton.hide();
+            }
         },
         
         /**

@@ -172,45 +172,7 @@ class IPTC_TagMaker {
      * Set default plugin options
      */
     private function set_default_options() {
-        // Default blocked keywords (from your existing code)
-        $default_blocked = array(
-            'G6', 'B&W', 'Photoblog', '60D', 'a7Rii', 'Explored', 'VW', 'm43',
-            'iPhoneography', 'Shot On iPhone', 'ShotOniPhone', 'lumix', 'Xti',
-            'kads', 'gm', 'palazzo', 'bmc', 'chevy', 'metroplex', 'arts', 'ads',
-            'fence', 'FE 28-70MM F3.5-5.6 OSS', 'jsc', 'cityscape', 'dart',
-            'fire escape', 'san miquel', 'tjc', 'waterfall', 'farming', 'outside',
-            'sports car', 'vegas', 'retail', 'beach', 'brands', 'desert', 'luna',
-            'space', 'roman catholic', 'outdoors', 'catholic church', 'concrete',
-            'church', 'high roller', 'aria', 'scenery', 'modern', '737',
-            'coastal redwoods', 'Brian Donnelly', 'sculptors', 'cargo ship',
-            'dma', 'feet', 'west bay beach', 'Lee Park', 'flamingo',
-            'filling station', 'virgin mary', 'ferry', 'jesus christ',
-            'gas stations', 'petrol', 'petrol pumps', 'gas pumps', 'gas bar',
-            'gasoline', 'city', 'H&M', 'maritime', 'nautical', 'dart rail',
-            'sunset', 'alaska way viaduct', 'colorado river', 'ammo', 'altar',
-            'nature photography', 'a7rii', 'pano', 'panorama', 'bridge',
-            'taos sky valley', 'forest fire', 'forest', 'skybridge', 'mountain',
-            'Federal Army & Navy Surplus', 'landscape', 'usa', 'foggy', 's90',
-            'colour', 'LLELA', 'locomotive', 'diesel locomotive', 'colours',
-            'colors', 'stikine', 'atx', 'memorial stadium', 'university of texas',
-            'stainless steel', 'bench', 'xmas', 'ut tower', 'ut',
-            'texas memorial stadium', 'mopop', 'steel', 'fall',
-            'evans library annex', 'aggieland', 'travel', 'tamu', 'monochrome',
-            'mono', 'lorry', 'lee park', 'stockyards', 'structure',
-            'st. paul place', 'classic car', 'lorries', 'EMP'
-        );
-        
-        // Insert default blocked keywords
-        global $wpdb;
-        $blocked_table = $wpdb->prefix . 'iptc_blocked_keywords';
-        
-        foreach ($default_blocked as $keyword) {
-            $wpdb->insert(
-                $blocked_table,
-                array('keyword' => $keyword),
-                array('%s')
-            );
-        }
+        // No default blocked keywords - users can add their own via the admin interface
         
         // Default settings
         $default_settings = array(

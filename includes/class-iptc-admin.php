@@ -40,6 +40,8 @@ class IPTC_TagMaker_Admin {
         add_action('wp_ajax_iptc_add_keyword_substitution', array($this, 'ajax_add_keyword_substitution'));
         add_action('wp_ajax_iptc_remove_keyword_substitution', array($this, 'ajax_remove_keyword_substitution'));
         add_action('wp_ajax_iptc_clear_all_keyword_substitutions', array($this, 'ajax_clear_all_keyword_substitutions'));
+        add_action('wp_ajax_iptc_bulk_import_blocked_keywords', array($this, 'ajax_bulk_import_blocked_keywords'));
+        add_action('wp_ajax_iptc_bulk_import_substitutions', array($this, 'ajax_bulk_import_substitutions'));
     }
     
     /**
@@ -182,6 +184,16 @@ class IPTC_TagMaker_Admin {
                     <input type="text" id="new-blocked-keyword" placeholder="<?php esc_attr_e('Enter keyword to block...', 'iptc-tagmaker'); ?>" />
                     <button type="button" id="add-blocked-keyword" class="button"><?php _e('Add Blocked Keyword', 'iptc-tagmaker'); ?></button>
                     <button type="button" id="clear-all-blocked-keywords" class="button button-secondary" style="margin-left: 10px;"><?php _e('Clear All', 'iptc-tagmaker'); ?></button>
+                    <button type="button" id="show-bulk-blocked" class="button button-secondary" style="margin-left: 10px;"><?php _e('Show Bulk Import', 'iptc-tagmaker'); ?></button>
+                </div>
+                
+                <div class="iptc-bulk-import" style="margin-bottom: 20px;">
+                    <h4><?php _e('Bulk Import Blocked Keywords', 'iptc-tagmaker'); ?></h4>
+                    <p><?php _e('Paste comma-separated keywords below to import multiple blocked keywords at once:', 'iptc-tagmaker'); ?></p>
+                    <textarea id="bulk-blocked-keywords" rows="4" cols="50" placeholder="<?php esc_attr_e('keyword1, keyword2, keyword3, ...', 'iptc-tagmaker'); ?>" style="width: 100%; max-width: 600px;"></textarea>
+                    <br>
+                    <button type="button" id="import-blocked-keywords" class="button button-primary" style="margin-top: 10px;"><?php _e('Import Keywords', 'iptc-tagmaker'); ?></button>
+                    <button type="button" id="toggle-bulk-blocked" class="button button-secondary" style="margin-top: 10px; margin-left: 10px;"><?php _e('Hide Bulk Import', 'iptc-tagmaker'); ?></button>
                 </div>
                 
                 <div id="blocked-keywords-list" class="iptc-keywords-list">
@@ -199,6 +211,16 @@ class IPTC_TagMaker_Admin {
                     <input type="text" id="replacement-keyword" placeholder="<?php esc_attr_e('Replacement keyword...', 'iptc-tagmaker'); ?>" />
                     <button type="button" id="add-keyword-substitution" class="button"><?php _e('Add Substitution', 'iptc-tagmaker'); ?></button>
                     <button type="button" id="clear-all-keyword-substitutions" class="button button-secondary" style="margin-left: 10px;"><?php _e('Clear All', 'iptc-tagmaker'); ?></button>
+                    <button type="button" id="show-bulk-substitutions" class="button button-secondary" style="margin-left: 10px;"><?php _e('Show Bulk Import', 'iptc-tagmaker'); ?></button>
+                </div>
+                
+                <div class="iptc-bulk-import" style="margin-bottom: 20px;">
+                    <h4><?php _e('Bulk Import Keyword Substitutions', 'iptc-tagmaker'); ?></h4>
+                    <p><?php _e('Paste substitution rules below. Format: "original1 => replacement1, original2 => replacement2" or one per line:', 'iptc-tagmaker'); ?></p>
+                    <textarea id="bulk-substitutions" rows="4" cols="50" placeholder="<?php esc_attr_e('old keyword => new keyword, another old => another new', 'iptc-tagmaker'); ?>" style="width: 100%; max-width: 600px;"></textarea>
+                    <br>
+                    <button type="button" id="import-substitutions" class="button button-primary" style="margin-top: 10px;"><?php _e('Import Substitutions', 'iptc-tagmaker'); ?></button>
+                    <button type="button" id="toggle-bulk-substitutions" class="button button-secondary" style="margin-top: 10px; margin-left: 10px;"><?php _e('Hide Bulk Import', 'iptc-tagmaker'); ?></button>
                 </div>
                 
                 <div id="keyword-substitutions-list" class="iptc-substitutions-list">
@@ -317,7 +339,10 @@ class IPTC_TagMaker_Admin {
             wp_send_json_error(__('You do not have permission to perform this action.', 'iptc-tagmaker'));
         }
         
-        $keyword = sanitize_text_field($_POST['keyword']);
+        $keyword = wp_unslash($_POST['keyword']); // Preserve exact characters
+        
+        // Additional cleaning to match what we do during import
+        $keyword = html_entity_decode($keyword, ENT_QUOTES, 'UTF-8');
         
         $success = $this->processor->remove_blocked_keyword($keyword);
         
@@ -327,7 +352,7 @@ class IPTC_TagMaker_Admin {
                 'html' => $this->get_blocked_keywords_list_html()
             ));
         } else {
-            wp_send_json_error(__('Failed to remove blocked keyword.', 'iptc-tagmaker'));
+            wp_send_json_error(__('Failed to remove blocked keyword. Check that the keyword exists exactly as shown.', 'iptc-tagmaker'));
         }
     }
     
@@ -440,6 +465,176 @@ class IPTC_TagMaker_Admin {
         } else {
             wp_send_json_error(__('Failed to clear keyword substitutions.', 'iptc-tagmaker'));
         }
+    }
+    
+    /**
+     * AJAX handler to bulk import blocked keywords
+     */
+    public function ajax_bulk_import_blocked_keywords() {
+        if (!wp_verify_nonce($_POST['nonce'], 'iptc_tagmaker_admin')) {
+            wp_send_json_error(__('Security check failed', 'iptc-tagmaker'));
+        }
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('You do not have permission to perform this action.', 'iptc-tagmaker'));
+        }
+        
+        $keywords_text = sanitize_textarea_field($_POST['keywords']);
+        
+        if (empty($keywords_text)) {
+            wp_send_json_error(__('No keywords provided.', 'iptc-tagmaker'));
+        }
+        
+        // Parse keywords - split by comma and clean up
+        $keywords = array_map('trim', explode(',', $keywords_text));
+        $keywords = array_filter($keywords); // Remove empty values
+        
+        if (empty($keywords)) {
+            wp_send_json_error(__('No valid keywords found.', 'iptc-tagmaker'));
+        }
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'iptc_blocked_keywords';
+        $imported_count = 0;
+        $duplicate_count = 0;
+        
+        foreach ($keywords as $keyword) {
+            $keyword = $this->clean_keyword($keyword);
+            if (empty($keyword)) continue;
+            
+            $result = $wpdb->insert(
+                $table_name,
+                array('keyword' => $keyword),
+                array('%s')
+            );
+            
+            if ($result !== false) {
+                $imported_count++;
+            } else {
+                $duplicate_count++;
+            }
+        }
+        
+        $message = sprintf(
+            __('Import completed: %d keywords imported, %d duplicates skipped.', 'iptc-tagmaker'),
+            $imported_count,
+            $duplicate_count
+        );
+        
+        wp_send_json_success(array(
+            'message' => $message,
+            'html' => $this->get_blocked_keywords_list_html()
+        ));
+    }
+    
+    /**
+     * AJAX handler to bulk import keyword substitutions
+     */
+    public function ajax_bulk_import_substitutions() {
+        if (!wp_verify_nonce($_POST['nonce'], 'iptc_tagmaker_admin')) {
+            wp_send_json_error(__('Security check failed', 'iptc-tagmaker'));
+        }
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('You do not have permission to perform this action.', 'iptc-tagmaker'));
+        }
+        
+        $substitutions_text = sanitize_textarea_field($_POST['substitutions']);
+        
+        if (empty($substitutions_text)) {
+            wp_send_json_error(__('No substitutions provided.', 'iptc-tagmaker'));
+        }
+        
+        // Parse substitutions - support multiple formats
+        $lines = preg_split('/[\r\n,]+/', $substitutions_text);
+        $substitutions = array();
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Look for => separator first
+            if (strpos($line, '=>') !== false) {
+                list($original, $replacement) = array_map('trim', explode('=>', $line, 2));
+            } 
+            // Also support tab-separated format (from Excel/spreadsheets)
+            elseif (strpos($line, "\t") !== false) {
+                list($original, $replacement) = array_map('trim', explode("\t", $line, 2));
+            } 
+            else {
+                continue; // Skip lines that don't have a clear separator
+            }
+            
+            // More comprehensive cleaning
+            $original = $this->clean_keyword($original);
+            $replacement = $this->clean_keyword($replacement);
+            
+            if (!empty($original) && !empty($replacement)) {
+                $substitutions[$original] = $replacement;
+            }
+        }
+        
+        if (empty($substitutions)) {
+            wp_send_json_error(__('No valid substitutions found. Use format: "original => replacement"', 'iptc-tagmaker'));
+        }
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'iptc_keyword_substitutions';
+        $imported_count = 0;
+        $updated_count = 0;
+        
+        foreach ($substitutions as $original => $replacement) {
+            $result = $wpdb->replace(
+                $table_name,
+                array(
+                    'original_keyword' => $original,
+                    'replacement_keyword' => $replacement
+                ),
+                array('%s', '%s')
+            );
+            
+            if ($result !== false) {
+                if ($result == 1) {
+                    $imported_count++;
+                } else {
+                    $updated_count++;
+                }
+            }
+        }
+        
+        $message = sprintf(
+            __('Import completed: %d substitutions imported, %d updated.', 'iptc-tagmaker'),
+            $imported_count,
+            $updated_count
+        );
+        
+        wp_send_json_success(array(
+            'message' => $message,
+            'html' => $this->get_keyword_substitutions_list_html()
+        ));
+    }
+    
+    /**
+     * Clean a keyword by removing quotes, slashes, and extra whitespace
+     * 
+     * @param string $keyword The keyword to clean
+     * @return string Cleaned keyword
+     */
+    private function clean_keyword($keyword) {
+        // Remove escape slashes
+        $keyword = stripslashes($keyword);
+        
+        // Remove any remaining surrounding whitespace
+        $keyword = trim($keyword);
+        
+        // More aggressive quote removal - keep doing it until no more quotes
+        do {
+            $before = $keyword;
+            $keyword = trim($keyword, '"\'');
+            $keyword = trim($keyword);
+        } while ($before !== $keyword && !empty($keyword));
+        
+        return $keyword;
     }
     
     /**

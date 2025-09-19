@@ -264,9 +264,13 @@ class IPTC_TagMaker_Keyword_Processor {
         global $wpdb;
         $table_name = $wpdb->prefix . 'iptc_blocked_keywords';
         
+        // Clean the keyword the same way we do during import
+        $keyword = stripslashes(trim($keyword, '"\''));
+        $keyword = trim($keyword);
+        
         $result = $wpdb->insert(
             $table_name,
-            array('keyword' => trim($keyword)),
+            array('keyword' => $keyword),
             array('%s')
         );
         
@@ -283,13 +287,17 @@ class IPTC_TagMaker_Keyword_Processor {
         global $wpdb;
         $table_name = $wpdb->prefix . 'iptc_blocked_keywords';
         
+        // Clean the keyword the same way we do during import
+        $keyword = stripslashes(trim($keyword, '"\''));
+        $keyword = trim($keyword);
+        
         $result = $wpdb->delete(
             $table_name,
-            array('keyword' => trim($keyword)),
+            array('keyword' => $keyword),
             array('%s')
         );
         
-        return $result !== false;
+        return $result !== false && $result > 0;
     }
     
     /**
