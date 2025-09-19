@@ -1,0 +1,182 @@
+/* IPTC TagMaker Admin Styles */
+
+.iptc-admin-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    margin: 20px 0;
+    padding: 20px;
+}
+
+.iptc-admin-section h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.iptc-add-form {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.iptc-add-form input[type="text"] {
+    margin-right: 10px;
+    min-width: 200px;
+}
+
+.iptc-add-form button {
+    vertical-align: top;
+}
+
+.iptc-keywords-list ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.iptc-keywords-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.iptc-keywords-list .keyword {
+    font-weight: 500;
+    flex-grow: 1;
+}
+
+.iptc-keywords-list button {
+    margin-left: 10px;
+}
+
+.iptc-substitutions-list table {
+    margin-top: 15px;
+}
+
+.iptc-substitutions-list th,
+.iptc-substitutions-list td {
+    padding: 10px;
+}
+
+.iptc-substitutions-list button {
+    font-size: 11px;
+    height: auto;
+    line-height: 1.4;
+    padding: 2px 8px;
+}
+
+/* Notifications */
+#iptc-admin-notifications {
+    margin: 15px 0;
+}
+
+#iptc-admin-notifications .notice {
+    margin: 5px 0;
+}
+
+/* Loading states */
+.iptc-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.iptc-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #ddd;
+    border-top-color: #0073aa;
+    border-radius: 50%;
+    animation: iptc-spin 1s linear infinite;
+}
+
+@keyframes iptc-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Meta box styles */
+#iptc-tagmaker-meta-content {
+    font-size: 13px;
+}
+
+#iptc-tagmaker-meta-content p {
+    margin: 10px 0;
+}
+
+#iptc-tagmaker-meta-content .button {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#iptc-keywords-preview {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 3px;
+}
+
+#iptc-keywords-preview h4 {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #666;
+}
+
+#iptc-keywords-preview p {
+    margin: 0 0 15px 0;
+    word-wrap: break-word;
+}
+
+#iptc-keywords-preview p:last-child {
+    margin-bottom: 0;
+}
+
+#iptc-process-result {
+    margin-top: 10px;
+}
+
+#iptc-process-result .notice {
+    margin: 0;
+    padding: 8px 12px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 782px) {
+    .iptc-add-form input[type="text"] {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+        margin-right: 0;
+    }
+    
+    .iptc-add-form button {
+        width: 100%;
+    }
+    
+    .iptc-keywords-list li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .iptc-keywords-list button {
+        margin-left: 0;
+        margin-top: 8px;
+        align-self: flex-end;
+    }
+}
