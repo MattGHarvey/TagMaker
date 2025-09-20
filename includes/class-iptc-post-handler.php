@@ -117,13 +117,7 @@ class IPTC_TagMaker_Post_Handler {
      * @return bool Success
      */
     private function process_post_keywords($post_id) {
-        $attachment_id = $this->processor->get_first_image_attachment($post_id);
-        
-        if (!$attachment_id) {
-            return false;
-        }
-        
-        return $this->processor->process_keywords_for_post($attachment_id, $post_id);
+        return $this->processor->process_keywords_for_post($post_id);
     }
     
     /**

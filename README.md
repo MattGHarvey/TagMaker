@@ -5,12 +5,12 @@ A WordPress plugin that automatically extracts IPTC keywords from the first imag
 ## Features
 
 - **Automatic Keyword Processing**: Extracts IPTC keywords from images and converts them to WordPress tags
-- **Smart Image Detection**: Processes the first image found in posts (featured image or first attached image)
+- **Smart Image Detection**: Processes the first image found in post content using original full-size images
 - **Keyword Blocking**: User-friendly interface to block unwanted keywords with bulk import/export
 - **Keyword Substitution**: Replace specific keywords with preferred alternatives
 - **Manual Processing**: Meta box in post editor for manual keyword processing and preview
 - **Bulk Operations**: Import/export blocked keywords and substitutions via comma-delimited text
-- **Configurable Settings**: Control auto-processing, tag replacement behavior, and more
+- **Configurable Settings**: Control auto-processing and tag replacement behavior
 - **Database Optimization**: Efficient storage using custom database tables
 - **WordPress Standards**: Follows WordPress coding standards and best practices
 
@@ -39,7 +39,8 @@ A WordPress plugin that automatically extracts IPTC keywords from the first imag
 ### General Settings
 - **Auto-process keywords**: Automatically process IPTC keywords when posts are saved
 - **Remove existing tags**: Remove current tags before adding new ones from IPTC
-- **Process featured image only**: Only extract keywords from featured images (default: process first image found)
+
+The plugin automatically processes the first image found in the post content, ensuring the most relevant image is used for keyword extraction.
 
 ### Blocked Keywords
 - Add individual keywords to block from becoming tags
@@ -199,10 +200,13 @@ A: The plugin only processes images when posts are saved, not on every page load
 
 ### 1.0.0
 - Initial release
-- Automatic IPTC keyword extraction
-- Keyword blocking and substitution
-- Admin interface with bulk operations
+- Automatic IPTC keyword extraction from first image in post content
+- Smart image detection using catch_that_image() method
+- Keyword blocking and substitution with bulk operations
+- Admin interface with bulk import/export
+- Proper tag clearing when images change
 - Manual processing via post meta box
+- Support for comma-containing tags
 - WordPress standards compliance
 
 ## Development

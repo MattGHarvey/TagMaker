@@ -30,5 +30,8 @@ delete_transient('iptc_tagmaker_cache');
 // Remove any user meta related to the plugin
 $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE 'iptc_tagmaker_%'");
 
+// Remove post meta created by the plugin
+$wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE meta_key IN ('_iptc_last_processed_image', '_iptc_generated_tags', 'fullKW')");
+
 // Clear any object cache
 wp_cache_flush();

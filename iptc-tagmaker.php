@@ -3,7 +3,7 @@
  * Plugin Name: IPTC TagMaker
  * Plugin URI: https://github.com/MattGHarvey/TagMaker
  * Description: Automatically extracts IPTC keywords from the first image in posts and converts them to WordPress tags, with keyword blocking and substitution features.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Matt Harvey
  * License: GPL v2 or later
  * Text Domain: iptc-tagmaker
@@ -191,9 +191,7 @@ class IPTC_TagMaker {
         // Default settings
         $default_settings = array(
             'auto_process_on_save' => 1,
-            'remove_existing_tags' => 1,
-            'minimum_keywords_for_fullkw' => 5,
-            'process_featured_image_only' => 0
+            'remove_existing_tags' => 1
         );
         
         update_option('iptc_tagmaker_settings', $default_settings);

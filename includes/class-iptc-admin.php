@@ -78,8 +78,6 @@ class IPTC_TagMaker_Admin {
         
         $sanitized['auto_process_on_save'] = !empty($input['auto_process_on_save']) ? 1 : 0;
         $sanitized['remove_existing_tags'] = !empty($input['remove_existing_tags']) ? 1 : 0;
-        $sanitized['process_featured_image_only'] = !empty($input['process_featured_image_only']) ? 1 : 0;
-        $sanitized['minimum_keywords_for_fullkw'] = intval($input['minimum_keywords_for_fullkw']);
         
         return $sanitized;
     }
@@ -148,24 +146,6 @@ class IPTC_TagMaker_Admin {
                                 <input type="checkbox" name="iptc_tagmaker_settings[remove_existing_tags]" value="1" <?php checked(!empty($settings['remove_existing_tags'])); ?> />
                                 <?php _e('Remove existing tags before adding new ones from IPTC keywords', 'iptc-tagmaker'); ?>
                             </label>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row"><?php _e('Process Featured Image Only', 'iptc-tagmaker'); ?></th>
-                        <td>
-                            <label>
-                                <input type="checkbox" name="iptc_tagmaker_settings[process_featured_image_only]" value="1" <?php checked(!empty($settings['process_featured_image_only'])); ?> />
-                                <?php _e('Only process keywords from featured image (ignore other attached images)', 'iptc-tagmaker'); ?>
-                            </label>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row"><?php _e('Minimum Keywords for Full Keywords Meta', 'iptc-tagmaker'); ?></th>
-                        <td>
-                            <input type="number" name="iptc_tagmaker_settings[minimum_keywords_for_fullkw]" value="<?php echo esc_attr(!empty($settings['minimum_keywords_for_fullkw']) ? $settings['minimum_keywords_for_fullkw'] : 5); ?>" min="0" class="small-text" />
-                            <p class="description"><?php _e('Minimum number of keywords required to save full keywords metadata', 'iptc-tagmaker'); ?></p>
                         </td>
                     </tr>
                 </table>
