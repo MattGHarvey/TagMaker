@@ -113,7 +113,11 @@ class IPTC_TagMaker_Keyword_Processor {
             
             // Apply substitutions
             foreach ($keyword_substitutions as $original => $replacement) {
-                if ($keyword_lower === strtolower($original)) {
+                // Clean and normalize both for comparison
+                $original_clean = trim(strtolower($original));
+                $keyword_clean = trim(strtolower($keyword_trim));
+                
+                if ($keyword_clean === $original_clean) {
                     $keyword_trim = $replacement;
                     break;
                 }
@@ -136,26 +140,27 @@ class IPTC_TagMaker_Keyword_Processor {
         
         // Remove existing tags if setting is enabled
         if (!empty($settings['remove_existing_tags'])) {
-            wp_set_post_tags($post_id, array());
+            wp_set_object_terms($post_id, array(), 'post_tag');
         }
         
-        $tag_slugs = array();
+        $tag_ids = array();
         
         foreach ($keywords as $keyword) {
             $tag_id = $this->get_or_create_tag($keyword);
             
             if ($tag_id) {
-                $term = get_term($tag_id, 'post_tag');
-                
-                if (!is_wp_error($term) && $term && !empty($term->slug)) {
-                    $tag_slugs[] = $term->slug;
-                }
+                $tag_ids[] = (int) $tag_id;
             }
         }
         
-        // Apply all tags at once
-        if (!empty($tag_slugs)) {
-            wp_set_post_tags($post_id, $tag_slugs, !empty($settings['remove_existing_tags']) ? false : true);
+        // Apply all tags at once using term IDs instead of names/slugs to avoid comma parsing
+        if (!empty($tag_ids)) {
+            wp_set_object_terms(
+                $post_id, 
+                $tag_ids, 
+                'post_tag', 
+                !empty($settings['remove_existing_tags']) ? false : true
+            );
         }
     }
     
@@ -166,13 +171,26 @@ class IPTC_TagMaker_Keyword_Processor {
      * @return int|null The tag ID or null on error
      */
     private function get_or_create_tag($tag_name) {
+        // Clean the tag name
+        $tag_name = trim($tag_name);
+        
+        if (empty($tag_name)) {
+            return null;
+        }
+        
         $term = term_exists($tag_name, 'post_tag');
         
         if ($term !== 0 && $term !== null) {
             return $term['term_id'];
         } else {
-            $tag_name = wp_slash($tag_name);
-            $term = wp_insert_term($tag_name, 'post_tag');
+            // Use wp_insert_term with proper args array to handle commas correctly
+            $term = wp_insert_term(
+                $tag_name,  // The term name
+                'post_tag', // The taxonomy
+                array(
+                    'slug' => sanitize_title($tag_name)
+                )
+            );
             
             if (is_wp_error($term)) {
                 return null;

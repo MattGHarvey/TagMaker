@@ -1,0 +1,87 @@
+# IPTC TagMaker Translation Template
+# Copyright (c) 2025 Matt Harvey
+msgid ""
+msgstr ""
+"Project-Id-Version: IPTC TagMaker 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/MattGHarvey/TagMaker/issues\n"
+"POT-Creation-Date: 2025-09-19 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Manual\n"
+
+#: iptc-tagmaker.php:XXX
+msgid "Settings"
+msgstr ""
+
+#: iptc-tagmaker.php:XXX  
+msgid "Documentation"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "IPTC TagMaker Settings"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "General Settings"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Blocked Keywords"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Keyword Substitutions"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Auto-process keywords when posts are saved"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Remove existing tags before adding new ones"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Process featured image only"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Add Blocked Keyword"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Clear All"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Bulk Import"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Add Substitution"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Original Keyword"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Replacement"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Actions"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Remove"
+msgstr ""
+
+#: includes/class-iptc-admin.php:XXX
+msgid "Save Changes"
+msgstr ""

@@ -63,6 +63,9 @@ class IPTC_TagMaker {
         // Activation and deactivation hooks
         register_activation_hook(IPTC_TAGMAKER_PLUGIN_FILE, array($this, 'activate'));
         register_deactivation_hook(IPTC_TAGMAKER_PLUGIN_FILE, array($this, 'deactivate'));
+        
+        // Add plugin action links
+        add_filter('plugin_action_links_' . plugin_basename(IPTC_TAGMAKER_PLUGIN_FILE), array($this, 'add_action_links'));
     }
     
     /**
@@ -107,6 +110,17 @@ class IPTC_TagMaker {
      */
     public function load_textdomain() {
         load_plugin_textdomain('iptc-tagmaker', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    }
+    
+    /**
+     * Add plugin action links
+     */
+    public function add_action_links($links) {
+        $settings_link = '<a href="' . admin_url('options-general.php?page=iptc-tagmaker') . '">' . __('Settings', 'iptc-tagmaker') . '</a>';
+        $docs_link = '<a href="https://github.com/MattGHarvey/TagMaker#readme" target="_blank">' . __('Documentation', 'iptc-tagmaker') . '</a>';
+        
+        array_unshift($links, $settings_link, $docs_link);
+        return $links;
     }
     
     /**

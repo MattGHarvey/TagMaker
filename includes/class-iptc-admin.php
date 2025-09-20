@@ -368,8 +368,8 @@ class IPTC_TagMaker_Admin {
             wp_send_json_error(__('You do not have permission to perform this action.', 'iptc-tagmaker'));
         }
         
-        $original = sanitize_text_field($_POST['original']);
-        $replacement = sanitize_text_field($_POST['replacement']);
+        $original = $this->clean_keyword($_POST['original']);
+        $replacement = $this->clean_keyword($_POST['replacement']);
         
         if (empty($original) || empty($replacement)) {
             wp_send_json_error(__('Both original and replacement keywords are required.', 'iptc-tagmaker'));
