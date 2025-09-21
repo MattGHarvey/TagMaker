@@ -38,6 +38,7 @@ class IPTC_TagMaker_Admin {
         add_action('wp_ajax_iptc_remove_blocked_keyword', array($this, 'ajax_remove_blocked_keyword'));
         add_action('wp_ajax_iptc_clear_all_blocked_keywords', array($this, 'ajax_clear_all_blocked_keywords'));
         add_action('wp_ajax_iptc_add_keyword_substitution', array($this, 'ajax_add_keyword_substitution'));
+        add_action('wp_ajax_iptc_edit_keyword_substitution', array($this, 'ajax_edit_keyword_substitution'));
         add_action('wp_ajax_iptc_remove_keyword_substitution', array($this, 'ajax_remove_keyword_substitution'));
         add_action('wp_ajax_iptc_clear_all_keyword_substitutions', array($this, 'ajax_clear_all_keyword_substitutions'));
         add_action('wp_ajax_iptc_bulk_import_blocked_keywords', array($this, 'ajax_bulk_import_blocked_keywords'));
@@ -103,6 +104,7 @@ class IPTC_TagMaker_Admin {
                 'confirmDelete' => __('Are you sure you want to delete this item?', 'iptc-tagmaker'),
                 'addingKeyword' => __('Adding...', 'iptc-tagmaker'),
                 'removingKeyword' => __('Removing...', 'iptc-tagmaker'),
+                'savingChanges' => __('Saving...', 'iptc-tagmaker'),
                 'errorOccurred' => __('An error occurred. Please try again.', 'iptc-tagmaker'),
                 'keywordRequired' => __('Keyword is required.', 'iptc-tagmaker'),
                 'substitutionRequired' => __('Both original and replacement keywords are required.', 'iptc-tagmaker')
@@ -194,6 +196,16 @@ class IPTC_TagMaker_Admin {
                     <button type="button" id="show-bulk-substitutions" class="button button-secondary" style="margin-left: 10px;"><?php _e('Show Bulk Import', 'iptc-tagmaker'); ?></button>
                 </div>
                 
+                <!-- Edit Substitution Form (hidden by default) -->
+                <div id="edit-substitution-form" class="iptc-edit-form" style="display: none; background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin: 20px 0;">
+                    <h4><?php _e('Edit Keyword Substitution', 'iptc-tagmaker'); ?></h4>
+                    <input type="hidden" id="edit-substitution-original-value" />
+                    <input type="text" id="edit-original-keyword" placeholder="<?php esc_attr_e('Original keyword...', 'iptc-tagmaker'); ?>" />
+                    <input type="text" id="edit-replacement-keyword" placeholder="<?php esc_attr_e('Replacement keyword...', 'iptc-tagmaker'); ?>" />
+                    <button type="button" id="save-keyword-substitution-edit" class="button button-primary"><?php _e('Save Changes', 'iptc-tagmaker'); ?></button>
+                    <button type="button" id="cancel-keyword-substitution-edit" class="button button-secondary" style="margin-left: 10px;"><?php _e('Cancel', 'iptc-tagmaker'); ?></button>
+                </div>
+                
                 <div class="iptc-bulk-import" style="margin-bottom: 20px;">
                     <h4><?php _e('Bulk Import Keyword Substitutions', 'iptc-tagmaker'); ?></h4>
                     <p><?php _e('Paste substitution rules below. Format: "original1 => replacement1, original2 => replacement2" or one per line:', 'iptc-tagmaker'); ?></p>
@@ -266,6 +278,9 @@ class IPTC_TagMaker_Admin {
             echo '<td>' . esc_html($substitution->original_keyword) . '</td>';
             echo '<td>' . esc_html($substitution->replacement_keyword) . '</td>';
             echo '<td>';
+            echo '<button type="button" class="button button-small edit-keyword-substitution" data-original="' . esc_attr($substitution->original_keyword) . '" data-replacement="' . esc_attr($substitution->replacement_keyword) . '">';
+            echo __('Edit', 'iptc-tagmaker');
+            echo '</button> ';
             echo '<button type="button" class="button button-small remove-keyword-substitution" data-original="' . esc_attr($substitution->original_keyword) . '">';
             echo __('Remove', 'iptc-tagmaker');
             echo '</button>';
@@ -364,6 +379,46 @@ class IPTC_TagMaker_Admin {
             ));
         } else {
             wp_send_json_error(__('Failed to add keyword substitution.', 'iptc-tagmaker'));
+        }
+    }
+    
+    /**
+     * AJAX handler to edit keyword substitution
+     */
+    public function ajax_edit_keyword_substitution() {
+        if (!wp_verify_nonce($_POST['nonce'], 'iptc_tagmaker_admin')) {
+            wp_send_json_error(__('Security check failed', 'iptc-tagmaker'));
+        }
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('You do not have permission to perform this action.', 'iptc-tagmaker'));
+        }
+        
+        $old_original = $this->clean_keyword($_POST['old_original']);
+        $new_original = $this->clean_keyword($_POST['new_original']);
+        $new_replacement = $this->clean_keyword($_POST['new_replacement']);
+        
+        if (empty($new_original) || empty($new_replacement)) {
+            wp_send_json_error(__('Both original and replacement keywords are required.', 'iptc-tagmaker'));
+        }
+        
+        // Remove the old substitution
+        $remove_success = $this->processor->remove_keyword_substitution($old_original);
+        
+        if (!$remove_success) {
+            wp_send_json_error(__('Failed to remove old keyword substitution.', 'iptc-tagmaker'));
+        }
+        
+        // Add the new substitution
+        $add_success = $this->processor->add_keyword_substitution($new_original, $new_replacement);
+        
+        if ($add_success) {
+            wp_send_json_success(array(
+                'message' => __('Keyword substitution updated successfully.', 'iptc-tagmaker'),
+                'html' => $this->get_keyword_substitutions_list_html()
+            ));
+        } else {
+            wp_send_json_error(__('Failed to update keyword substitution.', 'iptc-tagmaker'));
         }
     }
     

@@ -30,6 +30,15 @@
             // Add keyword substitution
             $('#add-keyword-substitution').on('click', this.addKeywordSubstitution);
             
+            // Edit keyword substitution
+            $(document).on('click', '.edit-keyword-substitution', this.editKeywordSubstitution);
+            
+            // Save keyword substitution edit
+            $('#save-keyword-substitution-edit').on('click', this.saveKeywordSubstitutionEdit);
+            
+            // Cancel keyword substitution edit
+            $('#cancel-keyword-substitution-edit').on('click', this.cancelKeywordSubstitutionEdit);
+            
             // Remove keyword substitution
             $(document).on('click', '.remove-keyword-substitution', this.removeKeywordSubstitution);
             
@@ -180,6 +189,83 @@
                     $button.prop('disabled', false).text('Add Substitution');
                 }
             });
+        },
+        
+        /**
+         * Edit keyword substitution
+         */
+        editKeywordSubstitution: function() {
+            var $button = $(this);
+            var original = $button.data('original');
+            var replacement = $button.data('replacement');
+            
+            // Show edit form
+            $('#edit-substitution-form').show();
+            $('#edit-original-keyword').val(original);
+            $('#edit-replacement-keyword').val(replacement);
+            $('#edit-substitution-original-value').val(original);
+            
+            // Scroll to edit form
+            $('html, body').animate({
+                scrollTop: $('#edit-substitution-form').offset().top - 50
+            }, 500);
+            
+            // Focus on first input
+            $('#edit-original-keyword').focus();
+        },
+        
+        /**
+         * Save keyword substitution edit
+         */
+        saveKeywordSubstitutionEdit: function() {
+            var $button = $(this);
+            var oldOriginal = $('#edit-substitution-original-value').val();
+            var newOriginal = $('#edit-original-keyword').val().trim();
+            var newReplacement = $('#edit-replacement-keyword').val().trim();
+            
+            if (!newOriginal || !newReplacement) {
+                iptcAdmin.showNotification(iptcTagMaker.strings.substitutionRequired, 'error');
+                return;
+            }
+            
+            $button.prop('disabled', true).text(iptcTagMaker.strings.savingChanges);
+            
+            $.ajax({
+                url: iptcTagMaker.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'iptc_edit_keyword_substitution',
+                    old_original: oldOriginal,
+                    new_original: newOriginal,
+                    new_replacement: newReplacement,
+                    nonce: iptcTagMaker.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#keyword-substitutions-list').html(response.data.html);
+                        iptcAdmin.showNotification(response.data.message, 'success');
+                        iptcAdmin.cancelKeywordSubstitutionEdit();
+                    } else {
+                        iptcAdmin.showNotification(response.data || iptcTagMaker.strings.errorOccurred, 'error');
+                    }
+                },
+                error: function() {
+                    iptcAdmin.showNotification(iptcTagMaker.strings.errorOccurred, 'error');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text('Save Changes');
+                }
+            });
+        },
+        
+        /**
+         * Cancel keyword substitution edit
+         */
+        cancelKeywordSubstitutionEdit: function() {
+            $('#edit-substitution-form').hide();
+            $('#edit-original-keyword').val('');
+            $('#edit-replacement-keyword').val('');
+            $('#edit-substitution-original-value').val('');
         },
         
         /**

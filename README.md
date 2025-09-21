@@ -49,6 +49,7 @@ The plugin automatically processes the first image found in the post content, en
 
 ### Keyword Substitutions
 - Replace unwanted keywords with preferred alternatives
+- Edit existing substitutions with inline editing
 - Format: `original keyword => replacement keyword`
 - Bulk import substitution rules
 - Clear all substitutions with one click
@@ -197,6 +198,11 @@ A: Currently, export functionality is not built-in, but you can access the data 
 A: The plugin only processes images when posts are saved, not on every page load. Processing is efficient and uses WordPress's built-in image handling functions.
 
 ## Changelog
+
+### 1.1.0
+- Added edit functionality for keyword substitutions
+- Improved admin interface with inline editing
+- Enhanced user experience with edit forms and animations
 
 ### 1.0.0
 - Initial release
