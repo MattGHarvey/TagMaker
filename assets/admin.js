@@ -11,6 +11,7 @@
          * Initialize admin functionality
          */
         init: function() {
+            console.log('IPTC TagMaker admin initialized');
             this.bindEvents();
         },
         
@@ -18,6 +19,9 @@
          * Bind event handlers
          */
         bindEvents: function() {
+            console.log('Binding events...');
+            console.log('iptcTagMaker object:', iptcTagMaker);
+            
             // Add blocked keyword
             $('#add-blocked-keyword').on('click', this.addBlockedKeyword);
             
@@ -52,6 +56,9 @@
             // Toggle bulk import sections
             $('#show-bulk-blocked, #toggle-bulk-blocked').on('click', this.toggleBulkBlocked);
             $('#show-bulk-substitutions, #toggle-bulk-substitutions').on('click', this.toggleBulkSubstitutions);
+            
+            // Debug functionality (use document delegation since element may not exist at load)
+
             
             // Enter key handlers
             $('#new-blocked-keyword').on('keypress', function(e) {
@@ -520,7 +527,9 @@
             $('html, body').animate({
                 scrollTop: $notifications.offset().top - 50
             }, 300);
-        }
+        },
+        
+
     };
     
     // Initialize when document is ready

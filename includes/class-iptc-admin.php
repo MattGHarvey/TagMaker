@@ -79,6 +79,7 @@ class IPTC_TagMaker_Admin {
         
         $sanitized['auto_process_on_save'] = !empty($input['auto_process_on_save']) ? 1 : 0;
         $sanitized['remove_existing_tags'] = !empty($input['remove_existing_tags']) ? 1 : 0;
+        $sanitized['debug_logging'] = !empty($input['debug_logging']) ? 1 : 0;
         
         return $sanitized;
     }
@@ -147,6 +148,16 @@ class IPTC_TagMaker_Admin {
                             <label>
                                 <input type="checkbox" name="iptc_tagmaker_settings[remove_existing_tags]" value="1" <?php checked(!empty($settings['remove_existing_tags'])); ?> />
                                 <?php _e('Remove existing tags before adding new ones from IPTC keywords', 'iptc-tagmaker'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Debug Logging', 'iptc-tagmaker'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="iptc_tagmaker_settings[debug_logging]" value="1" <?php checked(!empty($settings['debug_logging'])); ?> />
+                                <?php _e('Enable debug logging (logs will appear in wp-content/debug.log if WP_DEBUG_LOG is enabled)', 'iptc-tagmaker'); ?>
                             </label>
                         </td>
                     </tr>
@@ -219,6 +230,8 @@ class IPTC_TagMaker_Admin {
                     <?php $this->render_keyword_substitutions_list(); ?>
                 </div>
             </div>
+            
+
         </div>
         <?php
     }
@@ -693,4 +706,6 @@ class IPTC_TagMaker_Admin {
         $this->render_keyword_substitutions_list();
         return ob_get_clean();
     }
+    
+
 }

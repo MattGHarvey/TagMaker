@@ -20,14 +20,21 @@ class IPTC_TagMaker_Keyword_Processor {
      * @return bool Whether processing was successful
      */
     public function process_keywords_for_post($post_id, $force_clear = false) {
+        $this->debug_log('Starting IPTC processing for post ID: ' . $post_id, array(
+            'force_clear' => $force_clear
+        ));
+        
         // Get the first image from post content
         $attachment_id = $this->get_first_image_attachment($post_id);
         
         if (!$attachment_id) {
+            $this->debug_log('No image found for post ID: ' . $post_id);
             // No image found - clear existing IPTC tags if any
             $this->clear_iptc_generated_tags($post_id);
             return false;
         }
+        
+        $this->debug_log('Found image attachment ID: ' . $attachment_id . ' for post ID: ' . $post_id);
         
         // Check if this is a different image than last processed
         $last_processed_image = get_post_meta($post_id, '_iptc_last_processed_image', true);
@@ -54,6 +61,11 @@ class IPTC_TagMaker_Keyword_Processor {
         $iptc = iptcparse($info['APP13']);
         
         if (!$iptc || !isset($iptc["2#025"])) {
+            $this->debug_log('No IPTC keywords found in image', array(
+                'attachment_id' => $attachment_id,
+                'iptc_data_exists' => !empty($iptc),
+                'keywords_field_exists' => isset($iptc["2#025"])
+            ));
             // No keywords - clear existing tags if image changed
             if ($image_changed || $force_clear) {
                 $this->clear_iptc_generated_tags($post_id);
@@ -63,6 +75,11 @@ class IPTC_TagMaker_Keyword_Processor {
         }
 
         $keywords = $iptc["2#025"];
+        $this->debug_log('Found IPTC keywords', array(
+            'attachment_id' => $attachment_id,
+            'raw_keywords' => $keywords
+        ));
+        
         $filtered_keywords = $this->filter_keywords($keywords);
         
         // Apply keywords to post (this will handle clearing based on settings)
@@ -224,13 +241,24 @@ class IPTC_TagMaker_Keyword_Processor {
         $keyword_substitutions = $this->get_keyword_substitutions();
         $exclude_substrings = $this->get_exclude_substrings();
         
+        $this->debug_log('Starting keyword filtering', array(
+            'raw_keywords' => $keywords,
+            'blocked_keywords' => $blocked_keywords,
+            'keyword_substitutions' => $keyword_substitutions,
+            'exclude_substrings' => $exclude_substrings
+        ));
+        
         foreach ($keywords as $keyword) {
             $keyword_trim = trim($keyword);
             $keyword_lower = strtolower($keyword_trim);
+            $original_keyword = $keyword_trim; // Keep track of original for logging
+            
+            $this->debug_log('Processing keyword: ' . $keyword_trim);
             
             // Skip if blocked
             if (in_array($keyword_trim, $blocked_keywords, true) || 
                 in_array($keyword_lower, array_map('strtolower', $blocked_keywords), true)) {
+                $this->debug_log('Keyword blocked: ' . $keyword_trim);
                 continue;
             }
             
@@ -238,6 +266,7 @@ class IPTC_TagMaker_Keyword_Processor {
             $skip_keyword = false;
             foreach ($exclude_substrings as $needle) {
                 if (str_contains($keyword_lower, $needle)) {
+                    $this->debug_log('Keyword excluded (contains "' . $needle . '"): ' . $keyword_trim);
                     $skip_keyword = true;
                     break;
                 }
@@ -248,19 +277,41 @@ class IPTC_TagMaker_Keyword_Processor {
             }
             
             // Apply substitutions
+            $substitution_applied = false;
             foreach ($keyword_substitutions as $original => $replacement) {
                 // Clean and normalize both for comparison
                 $original_clean = trim(strtolower($original));
                 $keyword_clean = trim(strtolower($keyword_trim));
                 
+                $this->debug_log('Checking substitution', array(
+                    'keyword' => $keyword_trim,
+                    'keyword_clean' => $keyword_clean,
+                    'original' => $original,
+                    'original_clean' => $original_clean,
+                    'replacement' => $replacement,
+                    'match' => ($keyword_clean === $original_clean) ? 'YES' : 'NO'
+                ));
+                
                 if ($keyword_clean === $original_clean) {
+                    $this->debug_log('Substitution APPLIED: "' . $keyword_trim . '" -> "' . $replacement . '"');
                     $keyword_trim = $replacement;
+                    $substitution_applied = true;
                     break;
                 }
             }
             
+            if (!$substitution_applied) {
+                $this->debug_log('No substitution applied for: ' . $original_keyword);
+            }
+            
             $filtered_keywords[] = $keyword_trim;
         }
+        
+        $this->debug_log('Keyword filtering complete', array(
+            'input_count' => count($keywords),
+            'output_count' => count($filtered_keywords),
+            'filtered_keywords' => $filtered_keywords
+        ));
         
         return $filtered_keywords;
     }
@@ -490,4 +541,28 @@ class IPTC_TagMaker_Keyword_Processor {
         
         return $result !== false;
     }
+    
+    /**
+     * Debug logging helper
+     * 
+     * @param string $message Message to log
+     * @param array $data Additional data to log
+     */
+    private function debug_log($message, $data = array()) {
+        $settings = get_option('iptc_tagmaker_settings', array());
+        
+        if (empty($settings['debug_logging'])) {
+            return;
+        }
+        
+        $log_message = '[IPTC TagMaker] ' . $message;
+        
+        if (!empty($data)) {
+            $log_message .= ' | Data: ' . print_r($data, true);
+        }
+        
+        error_log($log_message);
+    }
+    
+
 }

@@ -191,7 +191,8 @@ class IPTC_TagMaker {
         // Default settings
         $default_settings = array(
             'auto_process_on_save' => 1,
-            'remove_existing_tags' => 1
+            'remove_existing_tags' => 1,
+            'debug_logging' => 0
         );
         
         update_option('iptc_tagmaker_settings', $default_settings);

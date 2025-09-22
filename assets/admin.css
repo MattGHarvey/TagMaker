@@ -250,3 +250,36 @@
         margin-bottom: 5px;
     }
 }
+
+/* Debug section styles */
+.iptc-debug-form {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f0f8ff;
+    border: 1px solid #0073aa;
+    border-radius: 4px;
+}
+
+.iptc-debug-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.iptc-debug-form input[type="number"] {
+    margin-right: 10px;
+    min-width: 100px;
+}
+
+#debug-results {
+    border-radius: 4px;
+}
+
+#debug-results h4 {
+    margin-top: 0;
+    color: #0073aa;
+}
+
+#debug-output {
+    border-radius: 4px;
+}
