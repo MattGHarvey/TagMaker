@@ -269,9 +269,10 @@ class IPTC_TagMaker_Post_Handler {
             wp_send_json_error(__('No IPTC keywords found in the image.', 'iptc-tagmaker'));
         }
         
-        // Filter keywords
-        $processor = new IPTC_TagMaker_Keyword_Processor();
-        $filtered_keywords = $this->get_filtered_keywords_preview($keywords);
+        // Filter keywords with detailed reasons
+        $filter_result = $this->get_filtered_keywords_preview($keywords);
+        $filtered_keywords = $filter_result['filtered'];
+        $filter_reasons = $filter_result['reasons'];
         
         $html = '<h4>' . __('Raw Keywords:', 'iptc-tagmaker') . '</h4>';
         $html .= '<p>' . implode(', ', $keywords) . '</p>';
@@ -281,6 +282,15 @@ class IPTC_TagMaker_Post_Handler {
             $html .= '<p>' . implode(', ', $filtered_keywords) . '</p>';
         } else {
             $html .= '<p><em>' . __('No keywords will be used after filtering.', 'iptc-tagmaker') . '</em></p>';
+        }
+        
+        if (!empty($filter_reasons)) {
+            $html .= '<h4>' . __('Keywords Filtered Out (with reasons):', 'iptc-tagmaker') . '</h4>';
+            $html .= '<ul style="margin-left: 20px;">';
+            foreach ($filter_reasons as $reason) {
+                $html .= '<li>' . esc_html($reason) . '</li>';
+            }
+            $html .= '</ul>';
         }
         
         wp_send_json_success(array('html' => $html));
@@ -342,17 +352,78 @@ class IPTC_TagMaker_Post_Handler {
     }
     
     /**
-     * Get filtered keywords for preview
+     * Get filtered keywords for preview with detailed reasons
      * 
      * @param array $keywords Raw keywords
-     * @return array Filtered keywords
+     * @return array Array with 'filtered' keywords and 'reasons' for filtering
      */
     private function get_filtered_keywords_preview($keywords) {
-        $processor_reflection = new ReflectionClass('IPTC_TagMaker_Keyword_Processor');
-        $filter_method = $processor_reflection->getMethod('filter_keywords');
-        $filter_method->setAccessible(true);
-        
         $processor = new IPTC_TagMaker_Keyword_Processor();
-        return $filter_method->invoke($processor, $keywords);
+        
+        // Get filtering data
+        $processor_reflection = new ReflectionClass('IPTC_TagMaker_Keyword_Processor');
+        
+        $blocked_method = $processor_reflection->getMethod('get_blocked_keywords');
+        $blocked_method->setAccessible(true);
+        $blocked_keywords = $blocked_method->invoke($processor);
+        
+        $substitutions_method = $processor_reflection->getMethod('get_keyword_substitutions');
+        $substitutions_method->setAccessible(true);
+        $keyword_substitutions = $substitutions_method->invoke($processor);
+        
+        $exclude_method = $processor_reflection->getMethod('get_exclude_substrings');
+        $exclude_method->setAccessible(true);
+        $exclude_substrings = $exclude_method->invoke($processor);
+        
+        $filtered_keywords = array();
+        $filter_reasons = array();
+        
+        foreach ($keywords as $keyword) {
+            $keyword_trim = trim($keyword);
+            $keyword_lower = strtolower($keyword_trim);
+            $original_keyword = $keyword_trim;
+            
+            // Check if blocked
+            if (in_array($keyword_trim, $blocked_keywords, true) || 
+                in_array($keyword_lower, array_map('strtolower', $blocked_keywords), true)) {
+                $filter_reasons[] = $keyword_trim . ' → BLOCKED (in blocked keywords list)';
+                continue;
+            }
+            
+            // Check if contains excluded substring
+            $skip_keyword = false;
+            foreach ($exclude_substrings as $needle) {
+                if (str_contains($keyword_lower, $needle)) {
+                    $filter_reasons[] = $keyword_trim . ' → EXCLUDED (contains "' . $needle . '")';
+                    $skip_keyword = true;
+                    break;
+                }
+            }
+            
+            if ($skip_keyword) {
+                continue;
+            }
+            
+            // Apply substitutions
+            $substitution_applied = false;
+            foreach ($keyword_substitutions as $original => $replacement) {
+                $original_clean = trim(strtolower($original));
+                $keyword_clean = trim(strtolower($keyword_trim));
+                
+                if ($keyword_clean === $original_clean) {
+                    $filter_reasons[] = $keyword_trim . ' → SUBSTITUTED to "' . $replacement . '"';
+                    $keyword_trim = $replacement;
+                    $substitution_applied = true;
+                    break;
+                }
+            }
+            
+            $filtered_keywords[] = $keyword_trim;
+        }
+        
+        return array(
+            'filtered' => $filtered_keywords,
+            'reasons' => $filter_reasons
+        );
     }
 }

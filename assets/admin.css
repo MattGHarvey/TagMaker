@@ -88,18 +88,45 @@
 
 .iptc-substitutions-list table {
     margin-top: 15px;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .iptc-substitutions-list th,
 .iptc-substitutions-list td {
-    padding: 10px;
+    padding: 12px;
+    border-bottom: 1px solid #e1e1e1;
+}
+
+.iptc-substitutions-list th {
+    background-color: #f1f1f1;
+    font-weight: 600;
+    border-bottom: 2px solid #ccc;
+}
+
+.iptc-substitutions-list tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.iptc-substitutions-list tr:hover {
+    background-color: #f0f8ff;
 }
 
 .iptc-substitutions-list button {
     font-size: 11px;
     height: auto;
     line-height: 1.4;
-    padding: 2px 8px;
+    padding: 4px 10px;
+    margin-right: 5px;
+}
+
+/* Add visual separation between rows */
+.iptc-substitutions-list tbody tr {
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.iptc-substitutions-list tbody tr:last-child {
+    border-bottom: 1px solid #e1e1e1;
 }
 
 /* Notifications */
@@ -282,4 +309,80 @@
 
 #debug-output {
     border-radius: 4px;
+}
+
+/* In-line editing styles */
+.substitution-row .edit-original,
+.substitution-row .edit-replacement {
+    width: 100%;
+    margin: 0;
+    padding: 4px 6px;
+    font-size: 13px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.substitution-row .edit-original:focus,
+.substitution-row .edit-replacement:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+    outline: none;
+}
+
+.substitution-row .edit-mode-buttons button {
+    margin-right: 5px;
+}
+
+.substitution-row .edit-mode-buttons .button-primary {
+    background: #0073aa;
+    border-color: #0073aa;
+}
+
+.substitution-row .edit-mode-buttons .button-primary:hover {
+    background: #005a87;
+    border-color: #005a87;
+}
+
+/* Smooth transitions for edit mode switching */
+.substitution-row .original-text,
+.substitution-row .replacement-text,
+.substitution-row .edit-original,
+.substitution-row .edit-replacement,
+.substitution-row .display-mode-buttons,
+.substitution-row .edit-mode-buttons {
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Make inline editing more obvious */
+.substitution-row.editing {
+    background-color: #f0f8ff !important;
+    box-shadow: 0 0 0 2px #0073aa;
+}
+
+.substitution-row.editing td {
+    border-color: #0073aa;
+    background-color: #f0f8ff;
+}
+
+/* Better button spacing in actions column */
+.iptc-substitutions-list td:last-child {
+    white-space: nowrap;
+    text-align: right;
+    min-width: 140px;
+}
+
+/* Ensure buttons are properly aligned */
+.display-mode-buttons,
+.edit-mode-buttons {
+    display: inline-block;
+}
+
+.display-mode-buttons button,
+.edit-mode-buttons button {
+    margin-left: 3px;
+}
+
+.display-mode-buttons button:first-child,
+.edit-mode-buttons button:first-child {
+    margin-left: 0;
 }

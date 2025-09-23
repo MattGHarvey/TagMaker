@@ -207,15 +207,7 @@ class IPTC_TagMaker_Admin {
                     <button type="button" id="show-bulk-substitutions" class="button button-secondary" style="margin-left: 10px;"><?php _e('Show Bulk Import', 'iptc-tagmaker'); ?></button>
                 </div>
                 
-                <!-- Edit Substitution Form (hidden by default) -->
-                <div id="edit-substitution-form" class="iptc-edit-form" style="display: none; background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin: 20px 0;">
-                    <h4><?php _e('Edit Keyword Substitution', 'iptc-tagmaker'); ?></h4>
-                    <input type="hidden" id="edit-substitution-original-value" />
-                    <input type="text" id="edit-original-keyword" placeholder="<?php esc_attr_e('Original keyword...', 'iptc-tagmaker'); ?>" />
-                    <input type="text" id="edit-replacement-keyword" placeholder="<?php esc_attr_e('Replacement keyword...', 'iptc-tagmaker'); ?>" />
-                    <button type="button" id="save-keyword-substitution-edit" class="button button-primary"><?php _e('Save Changes', 'iptc-tagmaker'); ?></button>
-                    <button type="button" id="cancel-keyword-substitution-edit" class="button button-secondary" style="margin-left: 10px;"><?php _e('Cancel', 'iptc-tagmaker'); ?></button>
-                </div>
+
                 
                 <div class="iptc-bulk-import" style="margin-bottom: 20px;">
                     <h4><?php _e('Bulk Import Keyword Substitutions', 'iptc-tagmaker'); ?></h4>
@@ -287,17 +279,42 @@ class IPTC_TagMaker_Admin {
         echo '<tbody>';
         
         foreach ($substitutions as $substitution) {
-            echo '<tr>';
-            echo '<td>' . esc_html($substitution->original_keyword) . '</td>';
-            echo '<td>' . esc_html($substitution->replacement_keyword) . '</td>';
+            $row_id = 'substitution-row-' . md5($substitution->original_keyword);
+            echo '<tr id="' . $row_id . '" class="substitution-row" data-original-keyword="' . esc_attr($substitution->original_keyword) . '">';
+            
+            // Display mode (default)
+            echo '<td class="display-mode">';
+            echo '<span class="original-text">' . esc_html($substitution->original_keyword) . '</span>';
+            echo '<input type="text" class="edit-original regular-text" value="' . esc_attr($substitution->original_keyword) . '" style="display: none;" />';
+            echo '</td>';
+            
+            echo '<td class="display-mode">';
+            echo '<span class="replacement-text">' . esc_html($substitution->replacement_keyword) . '</span>';
+            echo '<input type="text" class="edit-replacement regular-text" value="' . esc_attr($substitution->replacement_keyword) . '" style="display: none;" />';
+            echo '</td>';
+            
             echo '<td>';
-            echo '<button type="button" class="button button-small edit-keyword-substitution" data-original="' . esc_attr($substitution->original_keyword) . '" data-replacement="' . esc_attr($substitution->replacement_keyword) . '">';
+            // Display mode buttons
+            echo '<span class="display-mode-buttons">';
+            echo '<button type="button" class="button button-small edit-inline-substitution" data-original="' . esc_attr($substitution->original_keyword) . '">';
             echo __('Edit', 'iptc-tagmaker');
             echo '</button> ';
             echo '<button type="button" class="button button-small remove-keyword-substitution" data-original="' . esc_attr($substitution->original_keyword) . '">';
             echo __('Remove', 'iptc-tagmaker');
             echo '</button>';
+            echo '</span>';
+            
+            // Edit mode buttons (hidden by default)
+            echo '<span class="edit-mode-buttons" style="display: none;">';
+            echo '<button type="button" class="button button-small button-primary save-inline-substitution" data-original="' . esc_attr($substitution->original_keyword) . '">';
+            echo __('Save', 'iptc-tagmaker');
+            echo '</button> ';
+            echo '<button type="button" class="button button-small cancel-inline-substitution">';
+            echo __('Cancel', 'iptc-tagmaker');
+            echo '</button>';
+            echo '</span>';
             echo '</td>';
+            
             echo '</tr>';
         }
         

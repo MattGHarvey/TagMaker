@@ -19,6 +19,8 @@
          * Bind event handlers
          */
         bindEvents: function() {
+            var self = this;
+            
             console.log('Binding events...');
             console.log('iptcTagMaker object:', iptcTagMaker);
             
@@ -35,13 +37,26 @@
             $('#add-keyword-substitution').on('click', this.addKeywordSubstitution);
             
             // Edit keyword substitution
-            $(document).on('click', '.edit-keyword-substitution', this.editKeywordSubstitution);
+            $(document).on('click', '.edit-inline-substitution', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var $row = $(this).closest('.substitution-row');
+                self.startInlineEdit($row);
+            });
+            $(document).on('click', '.save-inline-substitution', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var $row = $(this).closest('.substitution-row');
+                self.saveInlineEdit($row);
+            });
+            $(document).on('click', '.cancel-inline-substitution', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var $row = $(this).closest('.substitution-row');
+                self.cancelInlineEdit($row);
+            });
             
-            // Save keyword substitution edit
-            $('#save-keyword-substitution-edit').on('click', this.saveKeywordSubstitutionEdit);
-            
-            // Cancel keyword substitution edit
-            $('#cancel-keyword-substitution-edit').on('click', this.cancelKeywordSubstitutionEdit);
+
             
             // Remove keyword substitution
             $(document).on('click', '.remove-keyword-substitution', this.removeKeywordSubstitution);
@@ -57,6 +72,15 @@
             $('#show-bulk-blocked, #toggle-bulk-blocked').on('click', this.toggleBulkBlocked);
             $('#show-bulk-substitutions, #toggle-bulk-substitutions').on('click', this.toggleBulkSubstitutions);
             
+            // Prevent form submission on Enter key in inline edit fields
+            $(document).on('keypress', '.edit-original, .edit-replacement', function(e) {
+                if (e.which === 13) { // Enter key
+                    e.preventDefault();
+                    var $row = $(this).closest('.substitution-row');
+                    self.saveInlineEdit($row);
+                }
+            });
+
             // Debug functionality (use document delegation since element may not exist at load)
 
             
@@ -199,80 +223,126 @@
         },
         
         /**
-         * Edit keyword substitution
+         * Start in-line editing of keyword substitution
          */
-        editKeywordSubstitution: function() {
-            var $button = $(this);
-            var original = $button.data('original');
-            var replacement = $button.data('replacement');
+        startInlineEdit: function($row) {
+            var originalKeyword = $row.data('original-keyword');
             
-            // Show edit form
-            $('#edit-substitution-form').show();
-            $('#edit-original-keyword').val(original);
-            $('#edit-replacement-keyword').val(replacement);
-            $('#edit-substitution-original-value').val(original);
+            // Add editing class for visual indication
+            $row.addClass('editing');
             
-            // Scroll to edit form
-            $('html, body').animate({
-                scrollTop: $('#edit-substitution-form').offset().top - 50
-            }, 500);
+            // Switch to edit mode
+            $row.find('.display-mode-buttons').hide();
+            $row.find('.edit-mode-buttons').show();
+            $row.find('.original-text, .replacement-text').hide();
+            $row.find('.edit-original, .edit-replacement').show().first().focus();
             
-            // Focus on first input
-            $('#edit-original-keyword').focus();
+            // Store original values in case of cancel
+            $row.data('original-values', {
+                original: $row.find('.edit-original').val(),
+                replacement: $row.find('.edit-replacement').val()
+            });
+            
+            // Ensure Save button is in correct initial state
+            $row.find('.save-inline-substitution').prop('disabled', false).text('Save');
         },
         
         /**
-         * Save keyword substitution edit
+         * Save in-line edit of keyword substitution
          */
-        saveKeywordSubstitutionEdit: function() {
-            var $button = $(this);
-            var oldOriginal = $('#edit-substitution-original-value').val();
-            var newOriginal = $('#edit-original-keyword').val().trim();
-            var newReplacement = $('#edit-replacement-keyword').val().trim();
+        saveInlineEdit: function($row) {
+            var self = this;
+            var originalKeyword = $row.data('original-keyword');
+            var newOriginal = $row.find('.edit-original').val().trim();
+            var newReplacement = $row.find('.edit-replacement').val().trim();
             
             if (!newOriginal || !newReplacement) {
-                iptcAdmin.showNotification(iptcTagMaker.strings.substitutionRequired, 'error');
+                alert('Both original and replacement keywords are required.');
                 return;
             }
             
-            $button.prop('disabled', true).text(iptcTagMaker.strings.savingChanges);
+            var $saveBtn = $row.find('.save-inline-substitution');
+            $saveBtn.prop('disabled', true).text('Saving...');
             
             $.ajax({
                 url: iptcTagMaker.ajaxUrl,
                 type: 'POST',
                 data: {
                     action: 'iptc_edit_keyword_substitution',
-                    old_original: oldOriginal,
+                    old_original: originalKeyword,
                     new_original: newOriginal,
                     new_replacement: newReplacement,
                     nonce: iptcTagMaker.nonce
                 },
                 success: function(response) {
                     if (response.success) {
-                        $('#keyword-substitutions-list').html(response.data.html);
+                        // Update the display text
+                        $row.find('.original-text').text(newOriginal);
+                        $row.find('.replacement-text').text(newReplacement);
+                        
+                        // Update the input field values for future edits
+                        $row.find('.edit-original').val(newOriginal);
+                        $row.find('.edit-replacement').val(newReplacement);
+                        
+                        // Update button data attributes (be specific about which buttons)
+                        $row.find('.edit-inline-substitution').data('original', newOriginal);
+                        $row.find('.save-inline-substitution').data('original', newOriginal);
+                        $row.find('.remove-keyword-substitution').data('original', newOriginal);
+                        
+                        // Update the stored original values for the cancel functionality
+                        $row.data('original-values', {
+                            original: newOriginal,
+                            replacement: newReplacement
+                        });
+                        
+                        // Reset the Save button state first (while it's still visible)
+                        $saveBtn.prop('disabled', false).text('Save');
+                        
+                        // Switch back to display mode manually
+                        $row.removeClass('editing');
+                        $row.find('.edit-mode-buttons').hide();
+                        $row.find('.display-mode-buttons').show();
+                        $row.find('.edit-original, .edit-replacement').hide();
+                        $row.find('.original-text, .replacement-text').show();
+                        
                         iptcAdmin.showNotification(response.data.message, 'success');
-                        iptcAdmin.cancelKeywordSubstitutionEdit();
                     } else {
-                        iptcAdmin.showNotification(response.data || iptcTagMaker.strings.errorOccurred, 'error');
+                        // Reset button state on error but stay in edit mode
+                        $saveBtn.prop('disabled', false).text('Save');
+                        alert(response.data || 'An error occurred while saving.');
                     }
                 },
                 error: function() {
-                    iptcAdmin.showNotification(iptcTagMaker.strings.errorOccurred, 'error');
-                },
-                complete: function() {
-                    $button.prop('disabled', false).text('Save Changes');
+                    // Reset button state on error but stay in edit mode
+                    $saveBtn.prop('disabled', false).text('Save');
+                    alert('An error occurred while saving.');
                 }
             });
         },
         
         /**
-         * Cancel keyword substitution edit
+         * Cancel in-line edit of keyword substitution
          */
-        cancelKeywordSubstitutionEdit: function() {
-            $('#edit-substitution-form').hide();
-            $('#edit-original-keyword').val('');
-            $('#edit-replacement-keyword').val('');
-            $('#edit-substitution-original-value').val('');
+        cancelInlineEdit: function($row) {
+            var originalValues = $row.data('original-values');
+            
+            // Remove editing class
+            $row.removeClass('editing');
+            
+            // Restore original values
+            if (originalValues) {
+                $row.find('.edit-original').val(originalValues.original);
+                $row.find('.edit-replacement').val(originalValues.replacement);
+            }
+            
+            // Reset any button states that might be stuck
+            $row.find('.save-inline-substitution').prop('disabled', false).text('Save');
+            
+            // Switch back to display mode
+            $row.find('.edit-mode-buttons').hide();
+            $row.find('.display-mode-buttons').show();
+            $row.find('.edit-original, .edit-replacement').hide();
+            $row.find('.original-text, .replacement-text').show();
         },
         
         /**
@@ -522,11 +592,6 @@
                     });
                 }, 5000);
             }
-            
-            // Scroll to top to show notification
-            $('html, body').animate({
-                scrollTop: $notifications.offset().top - 50
-            }, 300);
         },
         
 

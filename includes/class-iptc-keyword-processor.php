@@ -435,23 +435,13 @@ class IPTC_TagMaker_Keyword_Processor {
     }
     
     /**
-     * Get exclude substrings (hardcoded for now, could be made configurable)
+     * Get exclude substrings - removed hardcoded filters, users should control all filtering
      * 
-     * @return array Substrings to exclude
+     * @return array Substrings to exclude (empty array - no hardcoded exclusions)
      */
     private function get_exclude_substrings() {
-        return array(
-            'camera',
-            'lens',
-            'iso',
-            'f/',
-            'mm',
-            'sec',
-            'exposure',
-            'aperture',
-            'focal',
-            'flash'
-        );
+        // No hardcoded exclusions - users control all filtering via blocked keywords
+        return array();
     }
     
     /**
