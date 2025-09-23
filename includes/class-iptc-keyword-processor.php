@@ -286,8 +286,12 @@ class IPTC_TagMaker_Keyword_Processor {
                 $this->debug_log('Checking substitution', array(
                     'keyword' => $keyword_trim,
                     'keyword_clean' => $keyword_clean,
+                    'keyword_length' => strlen($keyword_clean),
+                    'keyword_bytes' => bin2hex($keyword_clean),
                     'original' => $original,
                     'original_clean' => $original_clean,
+                    'original_length' => strlen($original_clean),
+                    'original_bytes' => bin2hex($original_clean),
                     'replacement' => $replacement,
                     'match' => ($keyword_clean === $original_clean) ? 'YES' : 'NO'
                 ));
@@ -326,6 +330,12 @@ class IPTC_TagMaker_Keyword_Processor {
     private function apply_keywords_to_post($keywords, $post_id, $image_changed = false) {
         $settings = get_option('iptc_tagmaker_settings', array());
         
+        $this->debug_log('Applying keywords to post', array(
+            'post_id' => $post_id,
+            'keywords' => $keywords,
+            'keyword_count' => count($keywords)
+        ));
+        
         // If image changed, always clear IPTC-generated tags first
         if ($image_changed) {
             $this->clear_iptc_generated_tags($post_id);
@@ -339,10 +349,17 @@ class IPTC_TagMaker_Keyword_Processor {
         $tag_ids = array();
         
         foreach ($keywords as $keyword) {
+            $this->debug_log('Creating/finding tag for keyword: ' . $keyword);
             $tag_id = $this->get_or_create_tag($keyword);
             
             if ($tag_id) {
+                $this->debug_log('Tag created/found successfully', array(
+                    'keyword' => $keyword,
+                    'tag_id' => $tag_id
+                ));
                 $tag_ids[] = (int) $tag_id;
+            } else {
+                $this->debug_log('Failed to create/find tag for keyword: ' . $keyword);
             }
         }
         
@@ -380,20 +397,42 @@ class IPTC_TagMaker_Keyword_Processor {
         $term = term_exists($tag_name, 'post_tag');
         
         if ($term !== 0 && $term !== null) {
+            $this->debug_log('Tag already exists', array(
+                'tag_name' => $tag_name,
+                'term_id' => $term['term_id']
+            ));
             return $term['term_id'];
         } else {
             // Use wp_insert_term with proper args array to handle commas correctly
+            $proposed_slug = sanitize_title($tag_name);
+            
+            $this->debug_log('Creating new tag', array(
+                'tag_name' => $tag_name,
+                'proposed_slug' => $proposed_slug
+            ));
+            
             $term = wp_insert_term(
                 $tag_name,  // The term name
                 'post_tag', // The taxonomy
                 array(
-                    'slug' => sanitize_title($tag_name)
+                    'slug' => $proposed_slug
                 )
             );
             
             if (is_wp_error($term)) {
+                $this->debug_log('Tag creation failed', array(
+                    'tag_name' => $tag_name,
+                    'error_code' => $term->get_error_code(),
+                    'error_message' => $term->get_error_message()
+                ));
                 return null;
             }
+            
+            $this->debug_log('Tag created successfully', array(
+                'tag_name' => $tag_name,
+                'term_id' => $term['term_id'],
+                'actual_slug' => get_term($term['term_id'], 'post_tag')->slug ?? 'unknown'
+            ));
             
             return $term['term_id'];
         }
