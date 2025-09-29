@@ -121,7 +121,14 @@ class IPTC_TagMaker_Admin {
         
         ?>
         <div class="wrap">
-            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <h1 id="top"><?php echo esc_html(get_admin_page_title()); ?></h1>
+            
+            <!-- Quick Navigation -->
+            <div class="iptc-nav-menu" style="margin: 20px 0; padding: 15px; background: #f1f1f1; border-radius: 3px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
+                <strong><?php _e('Quick Navigation:', 'iptc-tagmaker'); ?></strong>
+                <a href="#blocked-keywords-section" class="button button-small" style="margin-left: 10px;"><?php _e('Jump to Blocked Keywords', 'iptc-tagmaker'); ?></a>
+                <a href="#keyword-substitutions-section" class="button button-small" style="margin-left: 5px;"><?php _e('Jump to Keyword Substitutions', 'iptc-tagmaker'); ?></a>
+            </div>
             
             <div id="iptc-admin-notifications"></div>
             
@@ -169,7 +176,7 @@ class IPTC_TagMaker_Admin {
             <hr />
             
             <!-- Blocked Keywords Section -->
-            <div class="iptc-admin-section">
+            <div id="blocked-keywords-section" class="iptc-admin-section">
                 <h2><?php _e('Blocked Keywords', 'iptc-tagmaker'); ?></h2>
                 <p><?php _e('Keywords in this list will be ignored and not converted to tags.', 'iptc-tagmaker'); ?></p>
                 
@@ -192,10 +199,14 @@ class IPTC_TagMaker_Admin {
                 <div id="blocked-keywords-list" class="iptc-keywords-list">
                     <?php $this->render_blocked_keywords_list(); ?>
                 </div>
+                
+                <div style="text-align: right; margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd;">
+                    <a href="#top" class="button button-small"><?php _e('↑ Back to Top', 'iptc-tagmaker'); ?></a>
+                </div>
             </div>
             
             <!-- Keyword Substitutions Section -->
-            <div class="iptc-admin-section">
+            <div id="keyword-substitutions-section" class="iptc-admin-section">
                 <h2><?php _e('Keyword Substitutions', 'iptc-tagmaker'); ?></h2>
                 <p><?php _e('Replace specific keywords with different ones when processing.', 'iptc-tagmaker'); ?></p>
                 
@@ -220,6 +231,10 @@ class IPTC_TagMaker_Admin {
                 
                 <div id="keyword-substitutions-list" class="iptc-substitutions-list">
                     <?php $this->render_keyword_substitutions_list(); ?>
+                </div>
+                
+                <div style="text-align: right; margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd;">
+                    <a href="#top" class="button button-small"><?php _e('↑ Back to Top', 'iptc-tagmaker'); ?></a>
                 </div>
             </div>
             

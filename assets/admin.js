@@ -13,6 +13,7 @@
         init: function() {
             console.log('IPTC TagMaker admin initialized');
             this.bindEvents();
+            this.initSmoothScrolling();
         },
         
         /**
@@ -94,6 +95,22 @@
             $('#original-keyword, #replacement-keyword').on('keypress', function(e) {
                 if (e.which === 13) {
                     $('#add-keyword-substitution').trigger('click');
+                }
+            });
+        },
+        
+        /**
+         * Initialize smooth scrolling for navigation links
+         */
+        initSmoothScrolling: function() {
+            // Handle smooth scrolling for anchor links
+            $('a[href^="#"]').on('click', function(e) {
+                var target = $(this.getAttribute('href'));
+                if (target.length) {
+                    e.preventDefault();
+                    $('html, body').stop().animate({
+                        scrollTop: target.offset().top - 50 // 50px offset for some breathing room
+                    }, 600);
                 }
             });
         },

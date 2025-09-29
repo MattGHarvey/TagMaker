@@ -285,13 +285,7 @@ class IPTC_TagMaker_Keyword_Processor {
                 
                 $this->debug_log('Checking substitution', array(
                     'keyword' => $keyword_trim,
-                    'keyword_clean' => $keyword_clean,
-                    'keyword_length' => strlen($keyword_clean),
-                    'keyword_bytes' => bin2hex($keyword_clean),
                     'original' => $original,
-                    'original_clean' => $original_clean,
-                    'original_length' => strlen($original_clean),
-                    'original_bytes' => bin2hex($original_clean),
                     'replacement' => $replacement,
                     'match' => ($keyword_clean === $original_clean) ? 'YES' : 'NO'
                 ));
