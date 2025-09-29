@@ -23,6 +23,7 @@ class IPTC_TagMaker_Admin {
     public function __construct() {
         $this->processor = new IPTC_TagMaker_Keyword_Processor();
         $this->init_hooks();
+        $this->migrate_settings();
     }
     
     /**
@@ -78,10 +79,48 @@ class IPTC_TagMaker_Admin {
         $sanitized = array();
         
         $sanitized['auto_process_on_save'] = !empty($input['auto_process_on_save']) ? 1 : 0;
-        $sanitized['remove_existing_tags'] = !empty($input['remove_existing_tags']) ? 1 : 0;
+        
+        // Handle new tag_mode setting
+        $sanitized['tag_mode'] = 'append'; // Default to append
+        if (!empty($input['tag_mode']) && in_array($input['tag_mode'], array('append', 'replace'))) {
+            $sanitized['tag_mode'] = $input['tag_mode'];
+        }
+        
+        // Keep backward compatibility: if old setting exists, convert it
+        if (!empty($input['remove_existing_tags'])) {
+            $sanitized['tag_mode'] = 'replace';
+        }
+        
         $sanitized['debug_logging'] = !empty($input['debug_logging']) ? 1 : 0;
         
         return $sanitized;
+    }
+    
+    /**
+     * Migrate old settings to new format
+     * Convert 'remove_existing_tags' to 'tag_mode'
+     */
+    private function migrate_settings() {
+        $settings = get_option('iptc_tagmaker_settings', array());
+        $needs_update = false;
+        
+        // Check if we have the old setting but not the new one
+        if (isset($settings['remove_existing_tags']) && !isset($settings['tag_mode'])) {
+            if (!empty($settings['remove_existing_tags'])) {
+                $settings['tag_mode'] = 'replace';
+            } else {
+                $settings['tag_mode'] = 'append';
+            }
+            
+            // Remove the old setting
+            unset($settings['remove_existing_tags']);
+            $needs_update = true;
+        }
+        
+        // Update the settings if needed
+        if ($needs_update) {
+            update_option('iptc_tagmaker_settings', $settings);
+        }
     }
     
     /**
@@ -150,12 +189,30 @@ class IPTC_TagMaker_Admin {
                     </tr>
                     
                     <tr>
-                        <th scope="row"><?php _e('Remove Existing Tags', 'iptc-tagmaker'); ?></th>
+                        <th scope="row"><?php _e('Tag Processing Mode', 'iptc-tagmaker'); ?></th>
                         <td>
-                            <label>
-                                <input type="checkbox" name="iptc_tagmaker_settings[remove_existing_tags]" value="1" <?php checked(!empty($settings['remove_existing_tags'])); ?> />
-                                <?php _e('Remove existing tags before adding new ones from IPTC keywords', 'iptc-tagmaker'); ?>
-                            </label>
+                            <?php
+                            // Handle backward compatibility: convert old setting to new format
+                            $tag_mode = 'append'; // Default to append
+                            if (isset($settings['tag_mode'])) {
+                                $tag_mode = $settings['tag_mode'];
+                            } elseif (!empty($settings['remove_existing_tags'])) {
+                                $tag_mode = 'replace';
+                            }
+                            ?>
+                            <fieldset>
+                                <legend class="screen-reader-text"><?php _e('Choose how IPTC keywords should be applied to posts', 'iptc-tagmaker'); ?></legend>
+                                <label>
+                                    <input type="radio" name="iptc_tagmaker_settings[tag_mode]" value="append" <?php checked($tag_mode, 'append'); ?> />
+                                    <strong><?php _e('Append to existing tags', 'iptc-tagmaker'); ?></strong><br />
+                                    <span class="description"><?php _e('Add IPTC keywords as new tags while keeping existing post tags', 'iptc-tagmaker'); ?></span>
+                                </label><br /><br />
+                                <label>
+                                    <input type="radio" name="iptc_tagmaker_settings[tag_mode]" value="replace" <?php checked($tag_mode, 'replace'); ?> />
+                                    <strong><?php _e('Replace all existing tags', 'iptc-tagmaker'); ?></strong><br />
+                                    <span class="description"><?php _e('Remove all existing tags and replace them with IPTC keywords only', 'iptc-tagmaker'); ?></span>
+                                </label>
+                            </fieldset>
                         </td>
                     </tr>
                     

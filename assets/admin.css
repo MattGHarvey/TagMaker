@@ -416,3 +416,40 @@ html {
 .edit-mode-buttons button:first-child {
     margin-left: 0;
 }
+
+/* Tag processing mode radio buttons styling */
+.form-table fieldset {
+    margin: 0;
+}
+
+.form-table fieldset label {
+    display: block;
+    margin-bottom: 15px;
+    padding: 12px 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.form-table fieldset label:hover {
+    background: #f0f8ff;
+    border-color: #0073aa;
+}
+
+.form-table fieldset label input[type="radio"] {
+    margin-right: 8px;
+}
+
+.form-table fieldset label strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #23282d;
+}
+
+.form-table fieldset label .description {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.4;
+}
