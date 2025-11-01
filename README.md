@@ -1,10 +1,11 @@
 # IPTC TagMaker WordPress Plugin
 
-A WordPress plugin that automatically extracts IPTC keywords from the first image in posts and converts them to WordPress tags, with advanced keyword blocking and substitution features.
+A WordPress plugin that automatically extracts IPTC/XMP keywords from the first image in posts and converts them to WordPress tags, with advanced keyword blocking and substitution features.
 
 ## Features
 
-- **Automatic Keyword Processing**: Extracts IPTC keywords from images and converts them to WordPress tags
+- **Automatic Keyword Processing**: Extracts IPTC keywords from JPG images and XMP keywords from WebP images, converting them to WordPress tags
+- **Multi-Format Support**: Supports both JPG (IPTC metadata) and WebP (XMP metadata) image formats
 - **Smart Image Detection**: Processes the first image found in post content using original full-size images
 - **Keyword Blocking**: User-friendly interface to block unwanted keywords with bulk import/export
 - **Keyword Substitution**: Replace specific keywords with preferred alternatives
@@ -18,7 +19,7 @@ A WordPress plugin that automatically extracts IPTC keywords from the first imag
 
 - WordPress 5.0 or higher
 - PHP 7.4 or higher
-- Images with IPTC metadata keywords
+- Images with IPTC metadata (JPG) or XMP metadata (WebP)
 
 ## Installation
 
@@ -58,7 +59,7 @@ The plugin automatically processes the first image found in the post content, en
 
 ### Automatic Processing
 
-When enabled in settings, the plugin will automatically process IPTC keywords whenever:
+When enabled in settings, the plugin will automatically process IPTC/XMP keywords whenever:
 - A post is saved or updated
 - A post status changes to "published"
 
@@ -161,9 +162,10 @@ NYC => New York City, LA => Los Angeles, SF => San Francisco
 ### Common Issues
 
 **No keywords extracted**
-- Ensure images contain IPTC keyword metadata
+- Ensure images contain metadata (IPTC for JPG or XMP for WebP)
 - Check that images are properly attached to posts
-- Verify IPTC keywords field (2#025) exists in image metadata
+- For JPG: Verify IPTC keywords field (2#025) exists in image metadata
+- For WebP: Verify XMP metadata contains dc:subject or similar keyword fields
 
 **Keywords not appearing as tags**
 - Check if keywords are in the blocked list

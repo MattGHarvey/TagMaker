@@ -183,7 +183,7 @@ class IPTC_TagMaker_Admin {
                         <td>
                             <label>
                                 <input type="checkbox" name="iptc_tagmaker_settings[auto_process_on_save]" value="1" <?php checked(!empty($settings['auto_process_on_save'])); ?> />
-                                <?php _e('Automatically process IPTC keywords when posts are saved', 'iptc-tagmaker'); ?>
+                                <?php _e('Automatically process IPTC/XMP keywords when posts are saved', 'iptc-tagmaker'); ?>
                             </label>
                         </td>
                     </tr>
@@ -201,16 +201,16 @@ class IPTC_TagMaker_Admin {
                             }
                             ?>
                             <fieldset>
-                                <legend class="screen-reader-text"><?php _e('Choose how IPTC keywords should be applied to posts', 'iptc-tagmaker'); ?></legend>
+                                <legend class="screen-reader-text"><?php _e('Choose how image keywords should be applied to posts', 'iptc-tagmaker'); ?></legend>
                                 <label>
                                     <input type="radio" name="iptc_tagmaker_settings[tag_mode]" value="append" <?php checked($tag_mode, 'append'); ?> />
                                     <strong><?php _e('Append to existing tags', 'iptc-tagmaker'); ?></strong><br />
-                                    <span class="description"><?php _e('Add IPTC keywords as new tags while keeping existing post tags', 'iptc-tagmaker'); ?></span>
+                                    <span class="description"><?php _e('Add image keywords as new tags while keeping existing post tags', 'iptc-tagmaker'); ?></span>
                                 </label><br /><br />
                                 <label>
                                     <input type="radio" name="iptc_tagmaker_settings[tag_mode]" value="replace" <?php checked($tag_mode, 'replace'); ?> />
                                     <strong><?php _e('Replace all existing tags', 'iptc-tagmaker'); ?></strong><br />
-                                    <span class="description"><?php _e('Remove all existing tags and replace them with IPTC keywords only', 'iptc-tagmaker'); ?></span>
+                                    <span class="description"><?php _e('Remove all existing tags and replace them with image keywords only', 'iptc-tagmaker'); ?></span>
                                 </label>
                             </fieldset>
                         </td>

@@ -2,8 +2,8 @@
 /**
  * Plugin Name: IPTC TagMaker
  * Plugin URI: https://github.com/MattGHarvey/TagMaker
- * Description: Automatically extracts IPTC keywords from the first image in posts and converts them to WordPress tags, with keyword blocking and substitution features.
- * Version: 1.2.0
+ * Description: Automatically extracts IPTC/XMP keywords from the first image (JPG, WebP) in posts and converts them to WordPress tags, with keyword blocking and substitution features.
+ * Version: 1.3.0
  * Author: Matt Harvey
  * License: GPL v2 or later
  * Text Domain: iptc-tagmaker
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('IPTC_TAGMAKER_VERSION', '1.1.0');
+define('IPTC_TAGMAKER_VERSION', '1.3.0');
 define('IPTC_TAGMAKER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('IPTC_TAGMAKER_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IPTC_TAGMAKER_PLUGIN_FILE', __FILE__);

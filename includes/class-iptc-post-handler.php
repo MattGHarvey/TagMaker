@@ -2,7 +2,7 @@
 /**
  * IPTC Post Handler Class
  * 
- * Handles WordPress post save events and processes IPTC keywords
+ * Handles WordPress post save events and processes IPTC/XMP keywords
  */
 
 // Prevent direct access
@@ -266,7 +266,7 @@ class IPTC_TagMaker_Post_Handler {
         $keywords = $this->get_raw_keywords($attachment_id);
         
         if (empty($keywords)) {
-            wp_send_json_error(__('No IPTC keywords found in the image.', 'iptc-tagmaker'));
+            wp_send_json_error(__('No keywords found in the image metadata (checked IPTC for JPG and XMP for WebP).', 'iptc-tagmaker'));
         }
         
         // Filter keywords with detailed reasons
@@ -318,12 +318,12 @@ class IPTC_TagMaker_Post_Handler {
                 'message' => __('Keywords processed successfully! Tags have been updated.', 'iptc-tagmaker')
             ));
         } else {
-            wp_send_json_error(__('Failed to process keywords. Make sure the post has an image with IPTC data.', 'iptc-tagmaker'));
+            wp_send_json_error(__('Failed to process keywords. Make sure the post has an image with metadata (IPTC for JPG or XMP for WebP).', 'iptc-tagmaker'));
         }
     }
     
     /**
-     * Get raw keywords from image
+     * Get raw keywords from image (supports IPTC for JPG and XMP for WebP)
      * 
      * @param int $attachment_id Attachment ID
      * @return array Raw keywords
@@ -335,20 +335,19 @@ class IPTC_TagMaker_Post_Handler {
             return array();
         }
         
-        $info = array();
-        $image = getimagesize($fullsize_path, $info);
+        // Use the processor's extraction method
+        $processor = new IPTC_TagMaker_Keyword_Processor();
+        $processor_reflection = new ReflectionClass('IPTC_TagMaker_Keyword_Processor');
         
-        if (!isset($info['APP13'])) {
+        $extract_method = $processor_reflection->getMethod('extract_keywords_from_image');
+        $extract_method->setAccessible(true);
+        $keywords = $extract_method->invoke($processor, $fullsize_path, $attachment_id);
+        
+        if ($keywords === false) {
             return array();
         }
         
-        $iptc = iptcparse($info['APP13']);
-        
-        if (!$iptc || !isset($iptc["2#025"])) {
-            return array();
-        }
-        
-        return $iptc["2#025"];
+        return $keywords;
     }
     
     /**
