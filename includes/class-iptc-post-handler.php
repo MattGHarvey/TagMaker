@@ -150,6 +150,8 @@ class IPTC_TagMaker_Post_Handler {
             echo '<p><strong>' . __('First Image Found:', 'iptc-tagmaker') . '</strong></p>';
             echo '<p>' . get_the_title($attachment_id) . '</p>';
             
+            echo '<p style="margin-top: 10px;"><em>' . __('This will process both filtered Tags and unfiltered Keywords.', 'iptc-tagmaker') . '</em></p>';
+            
             echo '<p>';
             echo '<button type="button" id="iptc-preview-keywords" class="button" data-post-id="' . $post->ID . '">';
             echo __('Preview Keywords', 'iptc-tagmaker');
@@ -274,10 +276,13 @@ class IPTC_TagMaker_Post_Handler {
         $filtered_keywords = $filter_result['filtered'];
         $filter_reasons = $filter_result['reasons'];
         
-        $html = '<h4>' . __('Raw Keywords:', 'iptc-tagmaker') . '</h4>';
+        $html = '<h4>' . __('Raw IPTC Keywords:', 'iptc-tagmaker') . '</h4>';
+        $html .= '<p><strong>' . __('(will be added to Keyword taxonomy without filtering)', 'iptc-tagmaker') . '</strong></p>';
         $html .= '<p>' . implode(', ', $keywords) . '</p>';
         
-        $html .= '<h4>' . __('Filtered Keywords (will be used as tags):', 'iptc-tagmaker') . '</h4>';
+        $html .= '<hr style="margin: 15px 0;">';
+        
+        $html .= '<h4>' . __('Filtered Keywords (will be used as Tags):', 'iptc-tagmaker') . '</h4>';
         if (!empty($filtered_keywords)) {
             $html .= '<p>' . implode(', ', $filtered_keywords) . '</p>';
         } else {
@@ -315,7 +320,7 @@ class IPTC_TagMaker_Post_Handler {
         
         if ($success) {
             wp_send_json_success(array(
-                'message' => __('Keywords processed successfully! Tags have been updated.', 'iptc-tagmaker')
+                'message' => __('Keywords processed successfully! Tags and Keywords have been updated.', 'iptc-tagmaker')
             ));
         } else {
             wp_send_json_error(__('Failed to process keywords. Make sure the post has an image with IPTC data.', 'iptc-tagmaker'));
@@ -335,20 +340,14 @@ class IPTC_TagMaker_Post_Handler {
             return array();
         }
         
-        $info = array();
-        $image = getimagesize($fullsize_path, $info);
+        // Use reflection to access the private extract_keywords_from_image method
+        $processor = new IPTC_TagMaker_Keyword_Processor();
+        $processor_reflection = new ReflectionClass('IPTC_TagMaker_Keyword_Processor');
         
-        if (!isset($info['APP13'])) {
-            return array();
-        }
+        $extract_method = $processor_reflection->getMethod('extract_keywords_from_image');
+        $extract_method->setAccessible(true);
         
-        $iptc = iptcparse($info['APP13']);
-        
-        if (!$iptc || !isset($iptc["2#025"])) {
-            return array();
-        }
-        
-        return $iptc["2#025"];
+        return $extract_method->invoke($processor, $fullsize_path);
     }
     
     /**

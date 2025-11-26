@@ -3,7 +3,7 @@
  * Plugin Name: IPTC TagMaker
  * Plugin URI: https://github.com/MattGHarvey/TagMaker
  * Description: Automatically extracts IPTC keywords from the first image in posts and converts them to WordPress tags, with keyword blocking and substitution features.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: Matt Harvey
  * License: GPL v2 or later
  * Text Domain: iptc-tagmaker
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('IPTC_TAGMAKER_VERSION', '1.1.0');
+define('IPTC_TAGMAKER_VERSION', '1.3.0');
 define('IPTC_TAGMAKER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('IPTC_TAGMAKER_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IPTC_TAGMAKER_PLUGIN_FILE', __FILE__);
@@ -58,6 +58,7 @@ class IPTC_TagMaker {
      */
     private function init_hooks() {
         add_action('init', array($this, 'init'));
+        add_action('init', array($this, 'register_taxonomies'));
         add_action('plugins_loaded', array($this, 'load_textdomain'));
         
         // Activation and deactivation hooks
@@ -103,6 +104,41 @@ class IPTC_TagMaker {
      */
     private function init_processor() {
         new IPTC_TagMaker_Post_Handler();
+    }
+    
+    /**
+     * Register custom taxonomies
+     */
+    public function register_taxonomies() {
+        // Register 'Keyword' taxonomy for unfiltered IPTC keywords
+        $labels = array(
+            'name'              => _x('Keywords', 'taxonomy general name', 'iptc-tagmaker'),
+            'singular_name'     => _x('Keyword', 'taxonomy singular name', 'iptc-tagmaker'),
+            'search_items'      => __('Search Keywords', 'iptc-tagmaker'),
+            'all_items'         => __('All Keywords', 'iptc-tagmaker'),
+            'parent_item'       => __('Parent Keyword', 'iptc-tagmaker'),
+            'parent_item_colon' => __('Parent Keyword:', 'iptc-tagmaker'),
+            'edit_item'         => __('Edit Keyword', 'iptc-tagmaker'),
+            'update_item'       => __('Update Keyword', 'iptc-tagmaker'),
+            'add_new_item'      => __('Add New Keyword', 'iptc-tagmaker'),
+            'new_item_name'     => __('New Keyword Name', 'iptc-tagmaker'),
+            'menu_name'         => __('Keywords', 'iptc-tagmaker'),
+        );
+        
+        $args = array(
+            'hierarchical'      => false,
+            'labels'            => $labels,
+            'show_ui'           => true,
+            'show_admin_column' => true,
+            'show_in_rest'      => true,
+            'query_var'         => true,
+            'rewrite'           => array('slug' => 'keyword'),
+            'public'            => true,
+            'show_in_nav_menus' => true,
+            'show_tagcloud'     => true,
+        );
+        
+        register_taxonomy('iptc_keyword', array('post'), $args);
     }
     
     /**
