@@ -442,6 +442,9 @@ class IPTC_TagMaker_Post_Handler {
         $substitutions_method = $processor_reflection->getMethod('get_keyword_substitutions');
         $substitutions_method->setAccessible(true);
         $keyword_substitutions = $substitutions_method->invoke($processor);
+
+        $normalize_method = $processor_reflection->getMethod('normalize_keyword_for_comparison');
+        $normalize_method->setAccessible(true);
         
         $exclude_method = $processor_reflection->getMethod('get_exclude_substrings');
         $exclude_method->setAccessible(true);
@@ -479,8 +482,8 @@ class IPTC_TagMaker_Post_Handler {
             // Apply substitutions
             $substitution_applied = false;
             foreach ($keyword_substitutions as $original => $replacement) {
-                $original_clean = trim(strtolower($original));
-                $keyword_clean = trim(strtolower($keyword_trim));
+                $original_clean = $normalize_method->invoke($processor, $original);
+                $keyword_clean = $normalize_method->invoke($processor, $keyword_trim);
                 
                 if ($keyword_clean === $original_clean) {
                     $filter_reasons[] = $keyword_trim . ' → SUBSTITUTED to "' . $replacement . '"';

@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.3.1 - September 30, 2026
+
+- Fixed manually managed keyword substitutions containing literal quotes and commas.
+- Fixed deletion of substitutions whose original values contain quotes.
+- Added admin diagnostics and asset cache busting for substitution requests.
+
 ## Version 1.3.0 - November 1, 2025
 
 ### Added

@@ -135,11 +135,14 @@ class IPTC_TagMaker_Admin {
         
         wp_enqueue_script('jquery');
         wp_enqueue_style('iptc-tagmaker-admin', IPTC_TAGMAKER_PLUGIN_URL . 'assets/admin.css', array(), IPTC_TAGMAKER_VERSION);
-        wp_enqueue_script('iptc-tagmaker-admin', IPTC_TAGMAKER_PLUGIN_URL . 'assets/admin.js', array('jquery'), IPTC_TAGMAKER_VERSION, true);
+        $admin_script_path = IPTC_TAGMAKER_PLUGIN_DIR . 'assets/admin.js';
+        $admin_script_version = file_exists($admin_script_path) ? filemtime($admin_script_path) : IPTC_TAGMAKER_VERSION;
+        wp_enqueue_script('iptc-tagmaker-admin', IPTC_TAGMAKER_PLUGIN_URL . 'assets/admin.js', array('jquery'), $admin_script_version, true);
         
         wp_localize_script('iptc-tagmaker-admin', 'iptcTagMaker', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('iptc_tagmaker_admin'),
+            'version' => IPTC_TAGMAKER_VERSION,
             'strings' => array(
                 'confirmDelete' => __('Are you sure you want to delete this item?', 'iptc-tagmaker'),
                 'addingKeyword' => __('Adding...', 'iptc-tagmaker'),
@@ -161,6 +164,13 @@ class IPTC_TagMaker_Admin {
         ?>
         <div class="wrap">
             <h1 id="top"><?php echo esc_html(get_admin_page_title()); ?></h1>
+
+            <div class="notice notice-info inline" style="margin: 12px 0;">
+                <p>
+                    <strong><?php echo esc_html(sprintf(__('IPTC TagMaker %s - substitution diagnostic build 3', 'iptc-tagmaker'), IPTC_TAGMAKER_VERSION)); ?></strong>
+                    <span id="iptc-admin-js-status" style="margin-left: 12px;"><?php esc_html_e('JavaScript: not loaded', 'iptc-tagmaker'); ?></span>
+                </p>
+            </div>
             
             <!-- Quick Navigation -->
             <div class="iptc-nav-menu" style="margin: 20px 0; padding: 15px; background: #f1f1f1; border-radius: 3px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
@@ -465,8 +475,8 @@ class IPTC_TagMaker_Admin {
             wp_send_json_error(__('You do not have permission to perform this action.', 'iptc-tagmaker'));
         }
         
-        $original = $this->clean_keyword($_POST['original']);
-        $replacement = $this->clean_keyword($_POST['replacement']);
+        $original = $this->clean_substitution_keyword($_POST['original']);
+        $replacement = $this->clean_substitution_keyword($_POST['replacement']);
         
         if (empty($original) || empty($replacement)) {
             wp_send_json_error(__('Both original and replacement keywords are required.', 'iptc-tagmaker'));
@@ -496,9 +506,9 @@ class IPTC_TagMaker_Admin {
             wp_send_json_error(__('You do not have permission to perform this action.', 'iptc-tagmaker'));
         }
         
-        $old_original = $this->clean_keyword($_POST['old_original']);
-        $new_original = $this->clean_keyword($_POST['new_original']);
-        $new_replacement = $this->clean_keyword($_POST['new_replacement']);
+        $old_original = $this->clean_substitution_keyword($_POST['old_original']);
+        $new_original = $this->clean_substitution_keyword($_POST['new_original']);
+        $new_replacement = $this->clean_substitution_keyword($_POST['new_replacement']);
         
         if (empty($new_original) || empty($new_replacement)) {
             wp_send_json_error(__('Both original and replacement keywords are required.', 'iptc-tagmaker'));
@@ -536,7 +546,7 @@ class IPTC_TagMaker_Admin {
             wp_send_json_error(__('You do not have permission to perform this action.', 'iptc-tagmaker'));
         }
         
-        $original = sanitize_text_field($_POST['original']);
+        $original = sanitize_text_field(wp_unslash($_POST['original']));
         
         $success = $this->processor->remove_keyword_substitution($original);
         
@@ -683,7 +693,7 @@ class IPTC_TagMaker_Admin {
         }
         
         // Parse substitutions - support multiple formats
-        $lines = preg_split('/[\r\n,]+/', $substitutions_text);
+        $lines = $this->split_substitution_entries($substitutions_text);
         $substitutions = array();
         
         foreach ($lines as $line) {
@@ -703,8 +713,8 @@ class IPTC_TagMaker_Admin {
             }
             
             // More comprehensive cleaning
-            $original = $this->clean_keyword($original);
-            $replacement = $this->clean_keyword($replacement);
+            $original = $this->clean_substitution_keyword($original);
+            $replacement = $this->clean_substitution_keyword($replacement);
             
             if (!empty($original) && !empty($replacement)) {
                 $substitutions[$original] = $replacement;
@@ -772,6 +782,55 @@ class IPTC_TagMaker_Admin {
         } while ($before !== $keyword && !empty($keyword));
         
         return $keyword;
+    }
+
+    /**
+     * Clean a substitution keyword while preserving literal quotes.
+     *
+     * @param string $keyword The substitution keyword to clean
+     * @return string Cleaned keyword
+     */
+    private function clean_substitution_keyword($keyword) {
+        return trim(stripslashes($keyword));
+    }
+
+    /**
+     * Split bulk substitutions without treating commas inside quotes as separators.
+     *
+     * @param string $substitutions_text Bulk substitution text
+     * @return array Substitution entries
+     */
+    private function split_substitution_entries($substitutions_text) {
+        $entries = array();
+        $entry = '';
+        $inside_quotes = false;
+        $length = strlen($substitutions_text);
+
+        for ($index = 0; $index < $length; $index++) {
+            $character = $substitutions_text[$index];
+
+            if ($character === '"' && ($index === 0 || $substitutions_text[$index - 1] !== '\\')) {
+                $inside_quotes = !$inside_quotes;
+            }
+
+            if (!$inside_quotes && ($character === ',' || $character === "\n" || $character === "\r")) {
+                $entry = trim($entry);
+                if ($entry !== '') {
+                    $entries[] = $entry;
+                }
+                $entry = '';
+                continue;
+            }
+
+            $entry .= $character;
+        }
+
+        $entry = trim($entry);
+        if ($entry !== '') {
+            $entries[] = $entry;
+        }
+
+        return $entries;
     }
     
     /**

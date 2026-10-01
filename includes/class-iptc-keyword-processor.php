@@ -471,9 +471,8 @@ class IPTC_TagMaker_Keyword_Processor {
             // Apply substitutions
             $substitution_applied = false;
             foreach ($keyword_substitutions as $original => $replacement) {
-                // Clean and normalize both for comparison
-                $original_clean = trim(strtolower($original));
-                $keyword_clean = trim(strtolower($keyword_trim));
+                $original_clean = $this->normalize_keyword_for_comparison($original);
+                $keyword_clean = $this->normalize_keyword_for_comparison($keyword_trim);
                 
                 $this->debug_log('Checking substitution', array(
                     'keyword' => $keyword_trim,
@@ -504,6 +503,20 @@ class IPTC_TagMaker_Keyword_Processor {
         ));
         
         return $filtered_keywords;
+    }
+
+    /**
+     * Normalize a keyword for substitution matching.
+     *
+     * @param string $keyword Keyword to normalize
+     * @return string Normalized keyword
+     */
+    private function normalize_keyword_for_comparison($keyword) {
+        $keyword = trim(html_entity_decode($keyword, ENT_QUOTES | ENT_XML1, 'UTF-8'));
+
+        return function_exists('mb_strtolower')
+            ? mb_strtolower($keyword, 'UTF-8')
+            : strtolower($keyword);
     }
     
     /**
@@ -901,7 +914,7 @@ class IPTC_TagMaker_Keyword_Processor {
             array('%s')
         );
         
-        return $result !== false;
+        return $result !== false && $result > 0;
     }
     
     /**

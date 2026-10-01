@@ -12,6 +12,7 @@
          */
         init: function() {
             console.log('IPTC TagMaker admin initialized');
+            $('#iptc-admin-js-status').text('JavaScript: loaded (substitution diagnostic build 3)');
             this.bindEvents();
             this.initSmoothScrolling();
         },
@@ -129,7 +130,7 @@
             }
             
             $button.prop('disabled', true).text(iptcTagMaker.strings.addingKeyword);
-            
+
             $.ajax({
                 url: iptcTagMaker.ajaxUrl,
                 type: 'POST',
@@ -168,7 +169,7 @@
             }
             
             $button.prop('disabled', true).text(iptcTagMaker.strings.removingKeyword);
-            
+
             $.ajax({
                 url: iptcTagMaker.ajaxUrl,
                 type: 'POST',
@@ -210,6 +211,11 @@
             }
             
             $button.prop('disabled', true).text(iptcTagMaker.strings.addingKeyword);
+
+            console.log('[IPTC TagMaker] Adding substitution', {
+                original: original,
+                replacement: replacement
+            });
             
             $.ajax({
                 url: iptcTagMaker.ajaxUrl,
@@ -221,6 +227,8 @@
                     nonce: iptcTagMaker.nonce
                 },
                 success: function(response) {
+                    console.log('[IPTC TagMaker] Add substitution response', response);
+
                     if (response.success) {
                         $originalInput.val('');
                         $replacementInput.val('');
@@ -230,7 +238,13 @@
                         iptcAdmin.showNotification(response.data || iptcTagMaker.strings.errorOccurred, 'error');
                     }
                 },
-                error: function() {
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error('[IPTC TagMaker] Add substitution request failed', {
+                        status: xhr.status,
+                        textStatus: textStatus,
+                        errorThrown: errorThrown,
+                        responseText: xhr.responseText
+                    });
                     iptcAdmin.showNotification(iptcTagMaker.strings.errorOccurred, 'error');
                 },
                 complete: function() {
@@ -374,6 +388,10 @@
             }
             
             $button.prop('disabled', true).text(iptcTagMaker.strings.removingKeyword);
+
+            console.log('[IPTC TagMaker] Removing substitution', {
+                original: original
+            });
             
             $.ajax({
                 url: iptcTagMaker.ajaxUrl,
@@ -384,6 +402,8 @@
                     nonce: iptcTagMaker.nonce
                 },
                 success: function(response) {
+                    console.log('[IPTC TagMaker] Remove substitution response', response);
+
                     if (response.success) {
                         $('#keyword-substitutions-list').html(response.data.html);
                         iptcAdmin.showNotification(response.data.message, 'success');
@@ -391,7 +411,13 @@
                         iptcAdmin.showNotification(response.data || iptcTagMaker.strings.errorOccurred, 'error');
                     }
                 },
-                error: function() {
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error('[IPTC TagMaker] Remove substitution request failed', {
+                        status: xhr.status,
+                        textStatus: textStatus,
+                        errorThrown: errorThrown,
+                        responseText: xhr.responseText
+                    });
                     iptcAdmin.showNotification(iptcTagMaker.strings.errorOccurred, 'error');
                 },
                 complete: function() {
