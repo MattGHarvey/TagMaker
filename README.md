@@ -8,7 +8,7 @@ A WordPress plugin that automatically extracts IPTC keywords from the first imag
 - **Smart Image Detection**: Processes the first image found in post content using original full-size images
 - **Keyword Blocking**: User-friendly interface to block unwanted keywords with bulk import/export
 - **Keyword Substitution**: Replace specific keywords with preferred alternatives
-- **Manual Processing**: Meta box in post editor for manual keyword processing and preview
+- **Manual Processing**: Extract IPTC tags from the post editor or from an administrator-only section on the published post
 - **Bulk Operations**: Import/export blocked keywords and substitutions via comma-delimited text
 - **Configurable Settings**: Control auto-processing and tag replacement behavior
 - **Database Optimization**: Efficient storage using custom database tables
@@ -68,6 +68,8 @@ In the post editor, you'll find an "IPTC TagMaker" meta box that allows you to:
 - Preview keywords that would be extracted
 - Manually process keywords for the current post
 - See which image will be processed
+
+Administrators can also use the **IPTC TagMaker** section at the bottom of an individual post to extract tags without opening the editor.
 
 ### Managing Blocked Keywords
 

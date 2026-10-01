@@ -43,6 +43,10 @@ class IPTC_TagMaker_Post_Handler {
         
         // Handle AJAX requests for keyword preview
         add_action('wp_ajax_iptc_preview_keywords', array($this, 'ajax_preview_keywords'));
+
+        // Add an administrator-only processing control to individual post views.
+        add_filter('the_content', array($this, 'add_post_processing_section'));
+        add_action('admin_post_iptc_process_post_keywords', array($this, 'handle_post_processing_request'));
     }
     
     /**
@@ -118,6 +122,75 @@ class IPTC_TagMaker_Post_Handler {
      */
     private function process_post_keywords($post_id) {
         return $this->processor->process_keywords_for_post($post_id);
+    }
+
+    /**
+     * Add a manual processing section to a single post for administrators.
+     *
+     * @param string $content Post content.
+     * @return string Post content with the processing section appended when applicable.
+     */
+    public function add_post_processing_section($content) {
+        global $post;
+
+        if (!is_singular('post') || !in_the_loop() || !is_main_query() || !$post ||
+            !current_user_can('manage_options') || !current_user_can('edit_post', $post->ID)) {
+            return $content;
+        }
+
+        $attachment_id = $this->processor->get_first_image_attachment($post->ID);
+        $result = isset($_GET['iptc_tagmaker_result']) ? sanitize_key(wp_unslash($_GET['iptc_tagmaker_result'])) : '';
+
+        $section = '<section id="iptc-tagmaker-process" class="iptc-tagmaker-process">';
+        $section .= '<h2>' . esc_html__('IPTC TagMaker', 'iptc-tagmaker') . '</h2>';
+
+        if ($result === 'success') {
+            $section .= '<p>' . esc_html__('IPTC keywords were extracted and the post tags have been updated.', 'iptc-tagmaker') . '</p>';
+        } elseif ($result === 'failed') {
+            $section .= '<p>' . esc_html__('No IPTC keywords could be extracted from this post image.', 'iptc-tagmaker') . '</p>';
+        }
+
+        if ($attachment_id) {
+            $section .= '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+            $section .= '<input type="hidden" name="action" value="iptc_process_post_keywords" />';
+            $section .= '<input type="hidden" name="post_id" value="' . esc_attr($post->ID) . '" />';
+            $section .= wp_nonce_field('iptc_process_post_keywords_' . $post->ID, 'iptc_tagmaker_process_nonce', true, false);
+            $section .= '<button type="submit">' . esc_html__('Extract IPTC Tags', 'iptc-tagmaker') . '</button>';
+            $section .= '</form>';
+        } else {
+            $section .= '<p>' . esc_html__('No image was found in this post.', 'iptc-tagmaker') . '</p>';
+        }
+
+        $section .= '</section>';
+
+        return $content . $section;
+    }
+
+    /**
+     * Process a post from the administrator-only front-end section.
+     */
+    public function handle_post_processing_request() {
+        $post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+        $nonce = isset($_POST['iptc_tagmaker_process_nonce']) ? sanitize_text_field(wp_unslash($_POST['iptc_tagmaker_process_nonce'])) : '';
+
+        if (!$post_id || !wp_verify_nonce($nonce, 'iptc_process_post_keywords_' . $post_id)) {
+            wp_die(esc_html__('Security check failed.', 'iptc-tagmaker'));
+        }
+
+        if (!current_user_can('manage_options') || !current_user_can('edit_post', $post_id)) {
+            wp_die(esc_html__('You do not have permission to process this post.', 'iptc-tagmaker'));
+        }
+
+        $post = get_post($post_id);
+        if (!$post || $post->post_type !== 'post') {
+            wp_die(esc_html__('Invalid post.', 'iptc-tagmaker'));
+        }
+
+        $result = $this->process_post_keywords($post_id) ? 'success' : 'failed';
+        $redirect_url = add_query_arg('iptc_tagmaker_result', $result, get_permalink($post_id));
+
+        wp_safe_redirect($redirect_url);
+        exit;
     }
     
     /**
